@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Star, Play, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
@@ -31,92 +30,119 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
     setCurrentIndex((prev) => (prev - 1 + movies.length) % movies.length);
   };
 
-  const currentMovie = movies[currentIndex];
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+  };
 
-  if (!currentMovie) return null;
+  const getVisibleMovies = () => {
+    const prevIndex = (currentIndex - 1 + movies.length) % movies.length;
+    const nextIndex = (currentIndex + 1) % movies.length;
+    
+    return {
+      prev: movies[prevIndex],
+      current: movies[currentIndex],
+      next: movies[nextIndex]
+    };
+  };
+
+  const visibleMovies = getVisibleMovies();
+
+  if (!visibleMovies.current) return null;
 
   return (
-    <div className="relative max-w-4xl mx-auto mb-8">
-      <div className="flex items-center justify-center space-x-4">
-        {/* Previous Button */}
+  <div className="relative w-full mb-12 py-8">
+      <div className="relative flex items-center justify-center max-w-6xl mx-auto">
+        {/* Left Navigation Arrow */}
         <Button
           variant="ghost"
-          size="lg"
+          size="icon"
           onClick={prevSlide}
-          className="w-16 h-16 bg-gray-400 hover:bg-gray-500 text-white rounded-lg flex-shrink-0"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full bg-[#232b3e] hover:bg-[#232b3e]/80 text-white border-0 shadow-lg"
         >
-          <ChevronLeft className="w-8 h-8" />
+          <ChevronLeft className="w-7 h-7" />
         </Button>
 
-        {/* Main Movie Display */}
-        <div className="relative flex-1 max-w-2xl">
+        {/* Carousel Container */}
+        <div className="relative flex items-center justify-center w-full max-w-4xl overflow-visible">
+          {/* Previous Movie */}
+          <div className="relative w-[340px] h-[180px] mx-2 opacity-60">
+            <div className="w-full h-full bg-gray-500 rounded-xl overflow-hidden flex items-end">
+              <ImageWithFallback
+                src={visibleMovies.prev.image}
+                alt={visibleMovies.prev.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Current Movie */}
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentMovie.id}
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
+              key={visibleMovies.current.id}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.3 }}
-              className="relative"
+              className="relative w-[540px] h-[220px] mx-2 z-10 cursor-pointer"
+              onClick={() => onMovieClick?.(visibleMovies.current)}
             >
-              <div className="relative w-full h-80 bg-black rounded-lg overflow-hidden group cursor-pointer"
-                   onClick={() => onMovieClick?.(currentMovie)}>
+              <div className="w-full h-full bg-black rounded-xl overflow-hidden shadow-xl flex items-end">
                 <ImageWithFallback
-                  src={currentMovie.image}
-                  alt={currentMovie.title}
+                  src={visibleMovies.current.image}
+                  alt={visibleMovies.current.title}
                   className="w-full h-full object-cover"
                 />
-                
                 {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                
+                <div className="absolute inset-0 bg-black rounded-xl" />
                 {/* Movie Info */}
-                <div className="absolute bottom-4 left-4 right-4">
-                  <h2 className="text-2xl font-bold text-white mb-2">{currentMovie.title}</h2>
-                  <div className="flex items-center space-x-4 mb-3">
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-white">{currentMovie.rating}</span>
-                    </div>
-                    <span className="text-white">{currentMovie.year}</span>
-                  </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                      <Play className="w-4 h-4 mr-2" />
-                      Watch Now
-                    </Button>
-                    <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                      <Info className="w-4 h-4 mr-2" />
-                      More Info
-                    </Button>
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <h3 className="text-xl font-semibold mb-1">
+                    {visibleMovies.current.title}
+                  </h3>
+                  <div className="flex items-center space-x-2 text-xs">
+                    <Star className="w-3 h-3 fill-white text-white" />
+                    <span>{visibleMovies.current.rating}</span>
+                    <span>|</span>
+                    <span>{visibleMovies.current.year}</span>
                   </div>
                 </div>
               </div>
             </motion.div>
           </AnimatePresence>
+
+          {/* Next Movie */}
+          <div className="relative w-[340px] h-[180px] mx-2 opacity-60">
+            <div className="w-full h-full bg-gray-500 rounded-xl overflow-hidden flex items-end">
+              <ImageWithFallback
+                src={visibleMovies.next.image}
+                alt={visibleMovies.next.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Next Button */}
+        {/* Right Navigation Arrow */}
         <Button
           variant="ghost"
-          size="lg"
+          size="icon"
           onClick={nextSlide}
-          className="w-16 h-16 bg-gray-400 hover:bg-gray-500 text-white rounded-lg flex-shrink-0"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full bg-[#232b3e] hover:bg-[#232b3e]/80 text-white border-0 shadow-lg"
         >
-          <ChevronRight className="w-8 h-8" />
+          <ChevronRight className="w-7 h-7" />
         </Button>
       </div>
 
-      {/* Dots Indicator */}
-      <div className="flex justify-center space-x-2 mt-4">
+      {/* Dot Indicators */}
+      <div className="flex justify-center space-x-4 mt-8">
         {movies.map((_, index) => (
           <button
             key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              index === currentIndex ? 'bg-purple-600' : 'bg-gray-300'
+            onClick={() => goToSlide(index)}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              index === currentIndex 
+                ? 'bg-white w-8' 
+                : 'bg-gray-500 hover:bg-gray-400 w-2'
             }`}
           />
         ))}
