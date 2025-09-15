@@ -6,7 +6,6 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         <div className="flex justify-center mb-2">
           <nav className="flex gap-6">
-            <a href="#" className="text-purple-400 hover:text-purple-300 transition-colors">Contacts</a>
             <a href="#" className="text-purple-400 hover:text-purple-300 transition-colors">FAQs</a>
             <a href="/" className="text-purple-400 hover:text-purple-300 transition-colors">GoWatch</a>
           </nav>

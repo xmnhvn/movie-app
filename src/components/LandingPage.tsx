@@ -86,6 +86,9 @@ const LandingPage: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
         <p className="text-base text-gray-600 text-justify">
           With GoWatch, movie lovers everywhere can find a convenient, safe, and enjoyable way to watch their favorite films—free, simple, and no account required.
         </p>
+        <br />
+        <br />
+        <br />
       </motion.section>
     </main>
 

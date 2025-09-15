@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
-import { Button } from './ui/button';
-import { motion, AnimatePresence } from 'motion/react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { useState } from "react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { motion } from "framer-motion";
+import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 interface Movie {
   id: string;
@@ -30,119 +29,100 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
     setCurrentIndex((prev) => (prev - 1 + movies.length) % movies.length);
   };
 
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
+  const CARD_WIDTH = 350;
+  const CARD_HEIGHT = 250;
+
+  // Helper function to compute index with wrap-around
+  const getIndex = (index: number) => {
+    return (index + movies.length) % movies.length;
   };
-
-  const getVisibleMovies = () => {
-    const prevIndex = (currentIndex - 1 + movies.length) % movies.length;
-    const nextIndex = (currentIndex + 1) % movies.length;
-    
-    return {
-      prev: movies[prevIndex],
-      current: movies[currentIndex],
-      next: movies[nextIndex]
-    };
-  };
-
-  const visibleMovies = getVisibleMovies();
-
-  if (!visibleMovies.current) return null;
 
   return (
-  <div className="relative w-full mb-12 py-8">
-      <div className="relative flex items-center justify-center max-w-6xl mx-auto">
-        {/* Left Navigation Arrow */}
-        <Button
-          variant="ghost"
-          size="icon"
+    <div className="relative w-full max-w-6xl mx-auto py-12">
+      {/* Carousel wrapper */}
+      <div className="relative flex items-center justify-center overflow-hidden">
+        {/* Prev Button */}
+        <button
           onClick={prevSlide}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full bg-[#232b3e] hover:bg-[#232b3e]/80 text-white border-0 shadow-lg"
+          className="absolute left-2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow"
         >
-          <ChevronLeft className="w-7 h-7" />
-        </Button>
+          <ChevronLeft className="w-5 h-5" />
+        </button>
 
-        {/* Carousel Container */}
-        <div className="relative flex items-center justify-center w-full max-w-4xl overflow-visible">
-          {/* Previous Movie */}
-          <div className="relative w-[340px] h-[180px] mx-2 opacity-60">
-            <div className="w-full h-full bg-gray-500 rounded-xl overflow-hidden flex items-end">
-              <ImageWithFallback
-                src={visibleMovies.prev.image}
-                alt={visibleMovies.prev.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
+        {/* Show exactly 3 cards: prev, current, next */}
+        <div className="flex items-center justify-center gap-6">
+          {[getIndex(currentIndex - 1), currentIndex, getIndex(currentIndex + 1)].map(
+            (index, pos) => {
+              const movie = movies[index];
+              const isCurrent = index === currentIndex;
 
-          {/* Current Movie */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={visibleMovies.current.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.3 }}
-              className="relative w-[540px] h-[220px] mx-2 z-10 cursor-pointer"
-              onClick={() => onMovieClick?.(visibleMovies.current)}
-            >
-              <div className="w-full h-full bg-black rounded-xl overflow-hidden shadow-xl flex items-end">
-                <ImageWithFallback
-                  src={visibleMovies.current.image}
-                  alt={visibleMovies.current.title}
-                  className="w-full h-full object-cover"
-                />
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-black rounded-xl" />
-                {/* Movie Info */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-xl font-semibold mb-1">
-                    {visibleMovies.current.title}
-                  </h3>
-                  <div className="flex items-center space-x-2 text-xs">
-                    <Star className="w-3 h-3 fill-white text-white" />
-                    <span>{visibleMovies.current.rating}</span>
-                    <span>|</span>
-                    <span>{visibleMovies.current.year}</span>
+              const width = isCurrent ? CARD_WIDTH : CARD_WIDTH * 0.8;
+              const height = isCurrent ? CARD_HEIGHT : CARD_HEIGHT * 0.8;
+
+              return (
+                <motion.div
+                  key={movie.id}
+                  onClick={() => onMovieClick?.(movie)}
+                  className={`relative cursor-pointer flex-shrink-0 rounded-xl overflow-hidden shadow-lg ${
+                    isCurrent ? "ring-4 ring-black/30" : ""
+                  }`}
+                  animate={{
+                    opacity: isCurrent ? 1 : 0.6,
+                  }}
+                  transition={{ duration: 0.4 }}
+                  style={{
+                    width: `${width}px`,
+                    height: `${height}px`,
+                    zIndex: isCurrent ? 10 : 5,
+                  }}
+                >
+                  {/* Image wrapper */}
+                  <div className="w-full h-full rounded-xl overflow-hidden">
+                    <ImageWithFallback
+                      src={movie.image}
+                      alt={movie.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
 
-          {/* Next Movie */}
-          <div className="relative w-[340px] h-[180px] mx-2 opacity-60">
-            <div className="w-full h-full bg-gray-500 rounded-xl overflow-hidden flex items-end">
-              <ImageWithFallback
-                src={visibleMovies.next.image}
-                alt={visibleMovies.next.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-black/40 rounded-xl" />
+
+                  {/* Info → only center card shows text */}
+                  {isCurrent && (
+                    <div className="absolute bottom-4 left-4 text-white">
+                      <h3 className="text-lg font-semibold">{movie.title}</h3>
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Star className="w-3 h-3 fill-white text-white" />
+                        <span>{movie.rating}</span>
+                        <span>|</span>
+                        <span>{movie.year}</span>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            }
+          )}
         </div>
 
-        {/* Right Navigation Arrow */}
-        <Button
-          variant="ghost"
-          size="icon"
+        {/* Next Button */}
+        <button
           onClick={nextSlide}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full bg-[#232b3e] hover:bg-[#232b3e]/80 text-white border-0 shadow-lg"
+          className="absolute right-2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow"
         >
-          <ChevronRight className="w-7 h-7" />
-        </Button>
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* Dot Indicators */}
-      <div className="flex justify-center space-x-4 mt-8">
+      {/* Dots */}
+      <div className="flex justify-center space-x-2 mt-6">
         {movies.map((_, index) => (
-          <button
+          <span
             key={index}
-            onClick={() => goToSlide(index)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              index === currentIndex 
-                ? 'bg-white w-8' 
-                : 'bg-gray-500 hover:bg-gray-400 w-2'
+            onClick={() => setCurrentIndex(index)}
+            className={`h-3 w-3 rounded-full cursor-pointer transition-all ${
+              index === currentIndex ? "bg-black scale-125" : "bg-gray-400"
             }`}
           />
         ))}
