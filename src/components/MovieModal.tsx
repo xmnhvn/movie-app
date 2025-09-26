@@ -27,7 +27,6 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -35,7 +34,6 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
             className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
             onClick={onClose}
           >
-            {/* Modal */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -44,7 +42,6 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
               className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header Image */}
               <div className="relative h-64 md:h-80">
                 <ImageWithFallback
                   src={movie.image}
@@ -52,8 +49,7 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                
-                {/* Close Button */}
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -63,7 +59,6 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
                   <X className="w-5 h-5" />
                 </Button>
                 
-                {/* Movie Title and Rating */}
                 <div className="absolute bottom-4 left-4 right-4">
                   <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{movie.title}</h1>
                   <div className="flex items-center space-x-4">
@@ -83,9 +78,7 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
                 </div>
               </div>
               
-              {/* Content */}
               <div className="p-6">
-                {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 mb-6">
                   <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
                     <Play className="w-5 h-5 mr-2" />
@@ -96,8 +89,7 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
                     Add to Watchlist
                   </Button>
                 </div>
-                
-                {/* Genres */}
+
                 <div className="flex flex-wrap gap-2 mb-6">
                   {movie.genre.map((genre) => (
                     <Badge key={genre} variant="secondary" className="px-3 py-1">
@@ -106,7 +98,6 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
                   ))}
                 </div>
                 
-                {/* Description */}
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Overview</h3>
                   <p className="text-gray-600 leading-relaxed">
@@ -115,8 +106,7 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
                     }
                   </p>
                 </div>
-                
-                {/* Additional Info */}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t">
                   <div>
                     <h4 className="font-semibold mb-2">Cast</h4>
