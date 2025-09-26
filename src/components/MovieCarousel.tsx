@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
@@ -32,16 +32,20 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
   const CARD_WIDTH = 350;
   const CARD_HEIGHT = 250;
 
-  // Helper function to compute index with wrap-around
   const getIndex = (index: number) => {
     return (index + movies.length) % movies.length;
   };
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % movies.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [movies.length]);
+
   return (
     <div className="relative w-full max-w-6xl mx-auto py-12">
-      {/* Carousel wrapper */}
       <div className="relative flex items-center justify-center overflow-hidden">
-        {/* Prev Button */}
         <button
           onClick={prevSlide}
           className="absolute left-2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow"
@@ -49,15 +53,17 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
           <ChevronLeft className="w-5 h-5" />
         </button>
 
-        {/* Show exactly 3 cards: prev, current, next */}
-        <div className="flex items-center justify-center gap-6">
+  <div className="flex items-center justify-center gap-0">
           {[getIndex(currentIndex - 1), currentIndex, getIndex(currentIndex + 1)].map(
             (index, pos) => {
               const movie = movies[index];
               const isCurrent = index === currentIndex;
 
-              const width = isCurrent ? CARD_WIDTH : CARD_WIDTH * 0.8;
+              const width = isCurrent ? CARD_WIDTH + 60 : CARD_WIDTH * 1;
               const height = isCurrent ? CARD_HEIGHT : CARD_HEIGHT * 0.8;
+              const zIndex = isCurrent ? 20 : 10;
+              const marginLeft = pos === 1 ? '-100px' : undefined;
+              const marginRight = pos === 1 ? '-100px' : undefined;
 
               return (
                 <motion.div
@@ -69,14 +75,18 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
                   animate={{
                     opacity: isCurrent ? 1 : 0.6,
                   }}
-                  transition={{ duration: 0.4 }}
+                  transition={isCurrent
+                    ? { duration: 0.7, type: 'spring', stiffness: 80, damping: 18 }
+                    : { duration: 0 }}
                   style={{
                     width: `${width}px`,
                     height: `${height}px`,
-                    zIndex: isCurrent ? 10 : 5,
+                    zIndex,
+                    marginLeft,
+                    marginRight,
                   }}
                 >
-                  {/* Image wrapper */}
+
                   <div className="w-full h-full rounded-xl overflow-hidden">
                     <ImageWithFallback
                       src={movie.image}
@@ -85,10 +95,8 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
                     />
                   </div>
 
-                  {/* Overlay */}
                   <div className="absolute inset-0 bg-black/40 rounded-xl" />
 
-                  {/* Info → only center card shows text */}
                   {isCurrent && (
                     <div className="absolute bottom-4 left-4 text-white">
                       <h3 className="text-lg font-semibold">{movie.title}</h3>
@@ -105,8 +113,6 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
             }
           )}
         </div>
-
-        {/* Next Button */}
         <button
           onClick={nextSlide}
           className="absolute right-2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow"
@@ -115,7 +121,6 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
         </button>
       </div>
 
-      {/* Dots */}
       <div className="flex justify-center space-x-2 mt-6">
         {movies.map((_, index) => (
           <span
