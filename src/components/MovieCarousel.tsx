@@ -45,7 +45,7 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
 
   return (
     <div className="relative w-full max-w-6xl mx-auto py-12">
-      <div className="relative flex items-center justify-center overflow-hidden">
+  <div className="relative flex items-center justify-center overflow-hidden">
         <button
           onClick={prevSlide}
           className="absolute left-2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow"
@@ -53,7 +53,7 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
           <ChevronLeft className="w-5 h-5" />
         </button>
 
-  <div className="flex items-center justify-center gap-0">
+  <div className="flex items-center justify-center gap-0 w-full">
           {[getIndex(currentIndex - 1), currentIndex, getIndex(currentIndex + 1)].map(
             (index, pos) => {
               const movie = movies[index];
