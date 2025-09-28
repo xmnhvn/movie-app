@@ -43,9 +43,17 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
     return () => clearInterval(interval);
   }, [movies.length]);
 
+  if (!movies || movies.length === 0) {
+    return (
+      <div className="relative w-full max-w-6xl mx-auto py-12 flex items-center justify-center">
+        <span className="text-gray-500 text-lg">No movies found.</span>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full max-w-6xl mx-auto py-12">
-  <div className="relative flex items-center justify-center overflow-hidden">
+      <div className="relative flex items-center justify-center overflow-hidden">
         <button
           onClick={prevSlide}
           className="absolute left-2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow"
@@ -53,10 +61,11 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
           <ChevronLeft className="w-5 h-5" />
         </button>
 
-  <div className="flex items-center justify-center gap-0 w-full">
+        <div className="flex items-center justify-center gap-0 w-full">
           {[getIndex(currentIndex - 1), currentIndex, getIndex(currentIndex + 1)].map(
             (index, pos) => {
               const movie = movies[index];
+              if (!movie) return null;
               const isCurrent = index === currentIndex;
 
               const width = isCurrent ? CARD_WIDTH + 60 : CARD_WIDTH * 1;
