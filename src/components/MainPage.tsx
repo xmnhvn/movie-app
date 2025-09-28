@@ -92,9 +92,11 @@ const MainPage: React.FC = () => {
         <MovieCarousel 
           movies={
             [...movies]
-              .filter(m => m.rating && !isNaN(m.rating))
+              .filter(m => {
+                const currentYear = new Date().getFullYear();
+                return m.rating && !isNaN(m.rating) && m.year && Number(m.year) === currentYear;
+              })
               .sort((a, b) => b.rating - a.rating)
-              .slice(0, 10)
           }
           onMovieClick={handleMovieClick}
         />
