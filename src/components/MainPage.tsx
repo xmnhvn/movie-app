@@ -98,12 +98,21 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   };
 
   return (
+<<<<<<< HEAD
   <div className="min-h-screen" style={{ backgroundColor: '#EFE4F4' }}>
       <Header onSearch={setSearchQuery} showNavigation />
   <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8 pb-32">
     <br />
     <br />
     <br />
+=======
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
+      {/* Starry background effect */}
+      <div className="fixed inset-0 bg-[radial-gradient(white_1px,transparent_1px)] [background-size:50px_50px] opacity-10 pointer-events-none"></div>
+      
+      <Header onSearch={setSearchQuery} showNavigation />
+      <main className="relative max-w-7xl mx-auto px-4 py-8 lg:px-8">
+>>>>>>> 9957b5c8b3ad3f2268de3286ee9eae86e599e35f
         <MovieCarousel 
           movies={
             [...movies]
