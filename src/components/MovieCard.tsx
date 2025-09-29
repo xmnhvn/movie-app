@@ -32,13 +32,21 @@ export function MovieCard({ movie, size = 'medium', onClick }: MovieCardProps) {
       className={`cursor-pointer ${cardSize}`}
       onClick={() => onClick?.(movie)}
     >
-      <Card className={`overflow-hidden group relative bg-gray-100 hover:shadow-xl transition-all duration-300 w-full h-full`}>
-        <div className="relative w-full h-[70%]">
+      <Card className={`overflow-hidden group relative bg-gradient-to-b from-gray-900 via-gray-800 to-black hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 w-full h-full border-gray-700 dark:border-gray-600`}>
+        <div className="relative w-full h-full">
           <ImageWithFallback
             src={movie.image}
             alt={movie.title}
-            className="w-full h-full object-cover aspect-[170/182]"
+            className="w-full h-full object-cover"
           />
+          {/* Enhanced overlay for better text visibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/30"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(white_1px,transparent_1px)] [background-size:20px_20px] opacity-10"></div>
+          
+          {/* Additional contrast enhancement */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+          
+          {/* Hover overlay */}
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <div className="flex space-x-2">
               <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
@@ -52,22 +60,27 @@ export function MovieCard({ movie, size = 'medium', onClick }: MovieCardProps) {
               </Button>
             </div>
           </div>
-          <div className="absolute top-2 right-2">
-            <Badge variant="secondary" className="bg-black/70 text-white border-0">
-              <Star className="w-3 h-3 mr-1 fill-yellow-400 text-yellow-400" />
-              {movie.rating}
-            </Badge>
-          </div>
-        </div>
-        <div className="p-4 h-[30%] flex flex-col justify-between">
-          <h3 className="font-semibold text-base mb-1 line-clamp-1">{movie.title}</h3>
-          <p className="text-xs text-gray-600">{movie.year}</p>
-          <div className="flex flex-wrap gap-1 mt-2">
-            {movie.genre.slice(0, 2).map((g) => (
-              <Badge key={g} variant="outline" className="text-xs px-2 py-0">
-                {g}
-              </Badge>
-            ))}
+
+          {/* Movie title and info overlay with rounded transparent background */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 text-white bg-black/60 backdrop-blur-sm rounded-t-2xl">
+            <h3 className="font-bold text-sm mb-1 line-clamp-2 drop-shadow-lg leading-tight">
+              {movie.title}
+            </h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs font-medium">{movie.rating}</span>
+                <span className="text-xs text-gray-300">|</span>
+                <span className="text-xs text-gray-300">{movie.year}</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {movie.genre.slice(0, 2).map((g) => (
+                <Badge key={g} variant="outline" className="text-xs px-2 py-1 bg-white/20 text-white border-white/30">
+                  {g}
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
       </Card>
