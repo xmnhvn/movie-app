@@ -5,8 +5,23 @@ import { motion } from 'motion/react';
 import React, { useState } from 'react';
 import GoWatchLogo from './GoWatch-logo.png';
 
-const LandingPage: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
+interface LandingPageProps {
+  onEnter: (query: string) => void;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleEnterClick = () => {
+    onEnter(searchQuery);
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onEnter(searchQuery);
+    }
+  };
+
   return (
   <div className="min-h-screen" style={{ backgroundColor: '#EFE4F4' }}>
     <br />
@@ -23,6 +38,7 @@ const LandingPage: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
             className="w-full h-12 pl-4 pr-12 bg-white/90 border-0 rounded-tl-lg rounded-bl-lg rounded-tr-none rounded-br-none shadow-md focus:bg-white transition-colors"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={handleInputKeyDown}
           />
           <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -40,7 +56,7 @@ const LandingPage: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
           >
                 <Button 
                   size="ml" 
-                  onClick={onEnter}
+                  onClick={handleEnterClick}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-x-110 hover:brightness-110"
             >
               Go Watch Now →
