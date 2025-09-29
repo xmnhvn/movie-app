@@ -86,9 +86,12 @@ const MainPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#EFE4F4]">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
+      {/* Starry background effect */}
+      <div className="fixed inset-0 bg-[radial-gradient(white_1px,transparent_1px)] [background-size:50px_50px] opacity-10 pointer-events-none"></div>
+      
       <Header onSearch={setSearchQuery} showNavigation />
-      <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8">
+      <main className="relative max-w-7xl mx-auto px-4 py-8 lg:px-8">
         <MovieCarousel 
           movies={
             [...movies]
