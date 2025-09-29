@@ -8,24 +8,29 @@ import GoWatchLogo from './GoWatch-logo.png';
 const LandingPage: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
   const [searchQuery, setSearchQuery] = useState('');
   return (
-  <div className="min-h-screen" style={{ backgroundColor: '#EFE4F4' }}>
+  <div className="min-h-screen dark:bg-gray-900" style={{ backgroundColor: '#EFE4F4' }}>
     <br />
     <br />
       <div className="flex flex-col items-center py-8">
         <div className="mb-4">
-          <img src={GoWatchLogo} alt="GoWatch Logo" className="h-16 w-auto mx-auto" />
+          <img 
+            src={GoWatchLogo} 
+            alt="GoWatch Logo" 
+            className="h-16 w-auto mx-auto drop-shadow-lg" 
+            style={{ filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))' }}
+          />
         </div>
         <br />
         <div className="w-full max-w-2xl mx-auto relative">
           <Input
             type="text"
             placeholder="Enter title..."
-            className="w-full h-12 pl-4 pr-12 bg-white/90 border-0 rounded-tl-lg rounded-bl-lg rounded-tr-none rounded-br-none shadow-md focus:bg-white transition-colors"
+            className="w-full h-12 pl-4 pr-12 bg-white/95 dark:bg-gray-800/95 dark:text-white border-0 rounded-tl-lg rounded-bl-lg rounded-tr-none rounded-br-none shadow-lg focus:bg-white dark:focus:bg-gray-800 transition-colors placeholder:text-gray-500 dark:placeholder:text-gray-400"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
-          <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+          <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 drop-shadow-sm">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
             </svg>
           </span>
@@ -39,9 +44,10 @@ const LandingPage: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
                 <Button 
-                  size="ml" 
+                  size="lg" 
                   onClick={onEnter}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-x-110 hover:brightness-110"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:brightness-110 dark:shadow-purple-500/20"
+                  style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)' }}
             >
               Go Watch Now →
             </Button>
