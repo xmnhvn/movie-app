@@ -40,7 +40,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
           <Input
             type="text"
             placeholder="Enter title..."
-            className="w-full h-12 pl-4 pr-12 bg-white/95 dark:bg-gray-800/95 dark:text-white border-0 rounded-tl-lg rounded-bl-lg rounded-tr-none rounded-br-none shadow-lg focus:bg-white dark:focus:bg-gray-800 transition-colors placeholder:text-gray-500 dark:placeholder:text-gray-400"
+            className="w-full h-12 pl-4 pr-12 bg-white dark:bg-gray-800/95 dark:text-white border-0 rounded-tl-lg rounded-bl-lg rounded-tr-none rounded-br-none shadow-lg focus:bg-white dark:focus:bg-gray-800 transition-colors placeholder:text-gray-500 dark:placeholder:text-gray-400"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
@@ -60,16 +60,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
                 <Button 
-<<<<<<< HEAD
                   size="ml" 
                   onClick={handleEnterClick}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-x-110 hover:brightness-110"
-=======
-                  size="lg" 
-                  onClick={onEnter}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:brightness-110 dark:shadow-purple-500/20"
-                  style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)' }}
->>>>>>> 9957b5c8b3ad3f2268de3286ee9eae86e599e35f
             >
               Go Watch Now →
             </Button>
