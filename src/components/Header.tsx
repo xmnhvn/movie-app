@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export function Header({ onSearch, showNavigation = false }: HeaderProps) {
   return (
-  <header className="relative bg-gray-800">
+  <header className="fixed top-0 left-0 w-full z-50 bg-gray-800">
       <div className="relative z-10 px-4 py-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-center gap-8">
