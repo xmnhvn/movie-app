@@ -131,13 +131,10 @@ export function MovieCarousel({ movies, onMovieClick }: MovieCarouselProps) {
       </div>
 
       <div className="flex justify-center space-x-2 mt-6">
-        {movies.map((_, index) => (
+        {[...Array(3)].map((_, i) => (
           <span
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`h-3 w-3 rounded-full cursor-pointer transition-all ${
-              index === currentIndex ? "bg-black scale-125" : "bg-gray-400"
-            }`}
+            key={i}
+            className={`h-3 w-3 rounded-full transition-all ${i === 1 ? "bg-black scale-125" : "bg-gray-400"}`}
           />
         ))}
       </div>
