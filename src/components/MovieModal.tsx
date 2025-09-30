@@ -84,10 +84,6 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
                     <Play className="w-5 h-5 mr-2" />
                     Watch Now
                   </Button>
-                  <Button size="lg" variant="outline">
-                    <Plus className="w-5 h-5 mr-2" />
-                    Add to Watchlist
-                  </Button>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-6">

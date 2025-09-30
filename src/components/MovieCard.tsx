@@ -39,29 +39,12 @@ export function MovieCard({ movie, size = 'medium', onClick }: MovieCardProps) {
             alt={movie.title}
             className="w-full h-full object-cover"
           />
-          {/* Enhanced overlay for better text visibility */}
+
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/30"></div>
           <div className="absolute inset-0 bg-[radial-gradient(white_1px,transparent_1px)] [background-size:20px_20px] opacity-10"></div>
-          
-          {/* Additional contrast enhancement */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-          
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="flex space-x-2">
-              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                <Play className="w-4 h-4" />
-              </Button>
-              <Button size="sm" variant="outline" className="bg-white/90 hover:bg-white">
-                <Plus className="w-4 h-4" />
-              </Button>
-              <Button size="sm" variant="outline" className="bg-white/90 hover:bg-white">
-                <Info className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
 
-          {/* Movie title and info overlay with rounded transparent background */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+
           <div className="absolute bottom-0 left-0 right-0 p-3 text-white bg-black/60 backdrop-blur-sm rounded-t-2xl">
             <h3 className="font-bold text-sm mb-1 line-clamp-2 drop-shadow-lg leading-tight">
               {movie.title}
