@@ -104,19 +104,22 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         <br />
         <br />
         <br />
-        <MovieCarousel 
-          movies={
-            [...movies]
-              .filter(m => m.year && !isNaN(Number(m.year)))
-              .sort((a, b) => {
-                const yearDiff = Number(b.year) - Number(a.year);
-                if (yearDiff !== 0) return yearDiff;
-                return b.rating - a.rating;
-              })
-              .slice(0, 5)
-          }
-          onMovieClick={handleMovieClick}
-        />
+          {searchQuery.trim() === '' && (
+            <MovieCarousel 
+              movies={
+                [...movies]
+                  .filter(m => m.year && !isNaN(Number(m.year)))
+                  .sort((a, b) => {
+                    const yearDiff = Number(b.year) - Number(a.year);
+                    if (yearDiff !== 0) return yearDiff;
+                    return b.rating - a.rating;
+                  })
+                  .slice(0, 5)
+              }
+              onMovieClick={handleMovieClick}
+            />
+          )}
+          <br />
         <GenreFilter 
           genres={allGenres}
           selectedGenres={selectedGenres}
@@ -133,7 +136,11 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         isOpen={isModalOpen}
         onClose={closeModal}
       />
-      <Footer />
+      {filteredMovies.length === 0 ? (
+        <Footer fixed />
+      ) : (
+        <Footer />
+      )}
     </div>
   );
 };

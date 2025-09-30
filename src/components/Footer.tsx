@@ -1,8 +1,8 @@
 import { Mail, Phone, MapPin } from 'lucide-react';
 
-export function Footer() {
+export function Footer({ fixed = false }: { fixed?: boolean }) {
   return (
-  <footer className="bg-gray-800 text-white py-4">
+    <footer className={`bg-gray-800 text-white py-4${fixed ? ' fixed bottom-0 left-0 w-full z-50' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         <div className="flex justify-center mb-2">
           <nav className="flex gap-6">
