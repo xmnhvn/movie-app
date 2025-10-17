@@ -6,9 +6,11 @@ import GoWatchLogo from './GoWatch-logo.png';
 interface HeaderProps {
   onSearch?: (query: string) => void;
   showNavigation?: boolean;
+  onOpenWatchlist?: () => void;
+  onOpenAuth?: () => void;
 }
 
-export function Header({ onSearch, showNavigation = false }: HeaderProps) {
+export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOpenAuth }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-gray-800">
       <div className="relative z-10 px-4 py-6 lg:px-8">
@@ -32,6 +34,15 @@ export function Header({ onSearch, showNavigation = false }: HeaderProps) {
                   <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
                     <Search className="w-5 h-5 drop-shadow-sm" />
                   </span>
+                </div>
+                <div className="ml-4">
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" onClick={() => onOpenWatchlist && onOpenWatchlist()} className="h-12 px-4">
+                      <Heart className="w-5 h-5 text-pink-400" />
+                      <span className="sr-only">Open watchlist</span>
+                    </Button>
+                    <Button variant="outline" onClick={() => onOpenAuth && onOpenAuth()} className="h-12 px-3">Sign in</Button>
+                  </div>
                 </div>
               </div>
             </div>
