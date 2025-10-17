@@ -6,6 +6,9 @@ import { GenreFilter } from './GenreFilter';
 import { MovieGrid } from './MovieGrid';
 import { MovieModal } from './MovieModal';
 import { Footer } from './Footer';
+import { ensureDemoUser, getWatchlist } from '../lib/watchlist';
+import { WatchlistModal } from './WatchlistModal';
+import { AuthModal } from './AuthModal';
 
 
 const genreMap: { [id: number]: string } = {
@@ -51,7 +54,11 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   useEffect(() => {
     const TMDB_API_KEY = '6ca1b09b9b4d7b85f93570a942e26c09';
@@ -68,6 +75,18 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         }));
         setMovies(mapped);
       });
+    // load initial watchlist for demo user if present (no auto-demo user anymore)
+    (async () => {
+      try {
+        // If you want an automatic demo user, uncomment the following lines:
+        // const user = await ensureDemoUser('demo');
+        // setCurrentUser(user);
+        // const wl = await getWatchlist(user.id);
+        // setWatchlist(wl || []);
+      } catch (err) {
+        console.warn('watchlist init failed', err);
+      }
+    })();
   }, []);
 
   const filteredMovies = useMemo(() => {
@@ -97,9 +116,26 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
     setSelectedMovie(null);
   };
 
+  const openWatchlist = () => setIsWatchlistOpen(true);
+  const closeWatchlist = () => setIsWatchlistOpen(false);
+
+  const openAuth = () => setIsAuthOpen(true);
+  const closeAuth = () => setIsAuthOpen(false);
+
+  const handleRemoveFromWatchlist = async (movieId: string) => {
+    if (!currentUser) return;
+    try {
+      await (await import('../lib/watchlist')).removeFromWatchlist(currentUser.id, movieId);
+      const wl = await getWatchlist(currentUser.id);
+      setWatchlist(wl || []);
+    } catch (err) {
+      console.warn('remove failed', err);
+    }
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#EFE4F4' }}>
-      <Header onSearch={setSearchQuery} showNavigation />
+  <Header onSearch={setSearchQuery} showNavigation onOpenWatchlist={openWatchlist} onOpenAuth={openAuth} />
       <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8 pb-32 mt-40">
         <br />
         <br />
@@ -129,6 +165,8 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
           title="Results"
           movies={filteredMovies}
           onMovieClick={handleMovieClick}
+          demoUserId={currentUser?.id ?? null}
+          watchlistIds={watchlist.map((i) => i.movieId)}
         />
       </main>
       <MovieModal 
@@ -136,6 +174,14 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         isOpen={isModalOpen}
         onClose={closeModal}
       />
+      <WatchlistModal isOpen={isWatchlistOpen} onClose={closeWatchlist} watchlist={watchlist} onRemove={handleRemoveFromWatchlist} />
+      <AuthModal isOpen={isAuthOpen} onClose={closeAuth} onLoginSuccess={(user: any) => {
+        setCurrentUser(user);
+        (async () => {
+          const wl = await getWatchlist(user.id);
+          setWatchlist(wl || []);
+        })();
+      }} />
       {filteredMovies.length === 0 ? (
         <Footer fixed />
       ) : (

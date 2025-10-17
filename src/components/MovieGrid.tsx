@@ -17,9 +17,11 @@ interface MovieGridProps {
   title: string;
   movies: Movie[];
   onMovieClick?: (movie: Movie) => void;
+  demoUserId?: number | null;
+  watchlistIds?: string[];
 }
 
-export function MovieGrid({ title, movies, onMovieClick }: MovieGridProps) {
+export function MovieGrid({ title, movies, onMovieClick, demoUserId = null, watchlistIds = [] }: MovieGridProps) {
   const [page, setPage] = useState(1);
   const pageSize = 20;
   const totalPages = Math.ceil(movies.length / pageSize);
@@ -43,6 +45,8 @@ export function MovieGrid({ title, movies, onMovieClick }: MovieGridProps) {
               movie={movie} 
               size="small" 
               onClick={onMovieClick}
+              demoUserId={demoUserId}
+              isSaved={watchlistIds.includes(String(movie.id))}
             />
           </motion.div>
         ))}
