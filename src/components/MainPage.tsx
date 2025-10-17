@@ -57,7 +57,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
     const TMDB_API_KEY = '6ca1b09b9b4d7b85f93570a942e26c09';
     axios.get(`https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_API_KEY}`)
       .then(res => {
-        const mapped = res.data.results.map(m => ({
+  const mapped = res.data.results.map((m: any) => ({
           id: m.id,
           title: m.title,
           year: m.release_date ? Number(m.release_date.slice(0, 4)) : 0,
