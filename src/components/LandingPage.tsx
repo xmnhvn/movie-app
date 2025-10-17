@@ -60,7 +60,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
                 <Button 
-                  size="ml" 
+                  size="lg" 
                   onClick={handleEnterClick}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-x-110 hover:brightness-110"
             >
