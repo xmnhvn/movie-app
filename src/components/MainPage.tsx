@@ -6,7 +6,7 @@ import { GenreFilter } from './GenreFilter';
 import { MovieGrid } from './MovieGrid';
 import { MovieModal } from './MovieModal';
 import { Footer } from './Footer';
-import { ensureDemoUser, getWatchlist } from '../lib/watchlist';
+import { ensureDemoUser, getWatchlist, addToWatchlist } from '../lib/watchlist';
 import { WatchlistModal } from './WatchlistModal';
 import { AuthModal } from './AuthModal';
 
@@ -59,6 +59,90 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [watchlist, setWatchlist] = useState<any[]>([]);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [pendingSave, setPendingSave] = useState<Movie | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('gowatch_user');
+      if (raw) {
+        const user = JSON.parse(raw);
+        setCurrentUser(user);
+        (async () => {
+          try {
+            const wl = await getWatchlist(user.id);
+            setWatchlist(wl || []);
+          } catch (err) {
+            console.warn('could not load watchlist on restore', err);
+          }
+        })();
+      }
+    } catch (err) {
+      // ignore
+    }
+
+    const onLogin = (e: any) => {
+      const user = e?.detail;
+      if (user) {
+        setCurrentUser(user);
+        (async () => {
+          try {
+            const wl = await getWatchlist(user.id);
+            setWatchlist(wl || []);
+            // if there was a pending save, complete it now
+            // check pending save from state or localStorage
+            let p = pendingSave;
+            if (!p) {
+              try { p = JSON.parse(localStorage.getItem('gowatch_pending_save') || 'null'); } catch { p = null; }
+            }
+            if (p) {
+              try {
+                await addToWatchlist(user.id, { id: p.id, title: p.title, poster: p.image });
+                const refreshed = await getWatchlist(user.id);
+                setWatchlist(refreshed || []);
+              } catch (err) {
+                console.warn('pending save failed after login', err);
+              } finally {
+                setPendingSave(null);
+                try { localStorage.removeItem('gowatch_pending_save'); } catch {}
+              }
+            }
+          } catch (err) {
+            console.warn('could not load watchlist after login', err);
+          }
+        })();
+      }
+    };
+    window.addEventListener('gowatch:login', onLogin as EventListener);
+    const onOpenAuth = () => setIsAuthOpen(true);
+    window.addEventListener('gowatch:openAuth', onOpenAuth as EventListener);
+
+    // handle save requests from MovieModal or other components
+    const onSaveMovie = async (e: any) => {
+      const movie: Movie | undefined = e?.detail;
+      if (!movie) return;
+      if (!currentUser) {
+  // remember the requested movie and open auth modal
+  setPendingSave(movie);
+  try { localStorage.setItem('gowatch_pending_save', JSON.stringify(movie)); } catch {}
+        setIsAuthOpen(true);
+        return;
+      }
+      try {
+        await addToWatchlist(currentUser.id, { id: movie.id, title: movie.title, poster: movie.image });
+        const wl = await getWatchlist(currentUser.id);
+        setWatchlist(wl || []);
+      } catch (err) {
+        console.warn('save movie failed', err);
+      }
+    };
+    window.addEventListener('gowatch:saveMovie', onSaveMovie as EventListener);
+
+    return () => {
+      window.removeEventListener('gowatch:login', onLogin as EventListener);
+      window.removeEventListener('gowatch:openAuth', onOpenAuth as EventListener);
+      window.removeEventListener('gowatch:saveMovie', onSaveMovie as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const TMDB_API_KEY = '6ca1b09b9b4d7b85f93570a942e26c09';
@@ -135,7 +219,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#EFE4F4' }}>
-  <Header onSearch={setSearchQuery} showNavigation onOpenWatchlist={openWatchlist} onOpenAuth={openAuth} />
+  <Header onSearch={setSearchQuery} showNavigation onOpenWatchlist={openWatchlist} onOpenAuth={openAuth} watchlistCount={watchlist.length} />
       <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8 pb-32 mt-40">
         <br />
         <br />
