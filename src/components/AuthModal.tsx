@@ -23,11 +23,16 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
       if (mode === 'login') {
         const { login } = await import('../lib/auth');
         const user = await login(username, password);
-        onLoginSuccess(user);
+        // persist and broadcast login so other parts of the app can react
+        try { localStorage.setItem('gowatch_user', JSON.stringify(user)); } catch {}
+        window.dispatchEvent(new CustomEvent('gowatch:login', { detail: user }));
+        onLoginSuccess && onLoginSuccess(user);
       } else {
         const { signup } = await import('../lib/auth');
         const user = await signup(username, password);
-        onLoginSuccess(user);
+        try { localStorage.setItem('gowatch_user', JSON.stringify(user)); } catch {}
+        window.dispatchEvent(new CustomEvent('gowatch:login', { detail: user }));
+        onLoginSuccess && onLoginSuccess(user);
       }
       onClose();
     } catch (err: any) {

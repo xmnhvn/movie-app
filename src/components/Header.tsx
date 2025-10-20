@@ -8,23 +8,27 @@ interface HeaderProps {
   showNavigation?: boolean;
   onOpenWatchlist?: () => void;
   onOpenAuth?: () => void;
+  watchlistCount?: number;
 }
 
-export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOpenAuth }: HeaderProps) {
+export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOpenAuth, watchlistCount }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-gray-800">
       <div className="relative z-10 px-4 py-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-center gap-8">
-            <div className="flex items-center w-full justify-center gap-8">
-              <img 
-                src={GoWatchLogo} 
-                alt="GoWatch Logo" 
-                className="h-8 w-auto drop-shadow-lg" 
-                style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }}
-              />
-              <div className="flex items-center w-full max-w-2xl">
-                <div className="relative flex-1">
+            <div className="flex items-center w-full justify-between gap-8">
+              <div className="flex items-center gap-8">
+                <img 
+                  src={GoWatchLogo} 
+                  alt="GoWatch Logo" 
+                  className="h-8 w-auto drop-shadow-lg" 
+                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }}
+                />
+              </div>
+
+              <div className="flex items-center w-full max-w-2xl mx-auto">
+                <div className="relative w-full">
                   <Input
                     type="text"
                     placeholder="Enter title..."
@@ -35,15 +39,23 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                     <Search className="w-5 h-5 drop-shadow-sm" />
                   </span>
                 </div>
-                <div className="ml-4">
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" onClick={() => onOpenWatchlist && onOpenWatchlist()} className="h-12 px-4">
-                      <Heart className="w-5 h-5 text-pink-400" />
-                      <span className="sr-only">Open watchlist</span>
-                    </Button>
-                    <Button variant="outline" onClick={() => onOpenAuth && onOpenAuth()} className="h-12 px-3">Sign in</Button>
+              </div>
+
+              <div className="flex items-center ml-4 space-x-4">
+                <Button onClick={() => onOpenWatchlist && onOpenWatchlist()} className="h-10 px-4 py-2 relative rounded-xl bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white shadow-lg hover:from-purple-800 hover:via-purple-700 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <Heart className="w-5 h-5 stroke-white" strokeWidth={1.5} />
+                    <span className="text-sm font-semibold">Watchlist</span>
                   </div>
-                </div>
+                  <span className="sr-only">Open watchlist</span>
+                  {typeof watchlistCount === 'number' && watchlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white">{watchlistCount}</span>
+                  )}
+                </Button>
+                <Button onClick={() => onOpenAuth && onOpenAuth()} className="h-10 px-4 py-2 bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white shadow-lg hover:from-purple-800 hover:via-purple-700 transition-colors rounded-xl flex items-center gap-3">
+                  <User className="w-5 h-5 text-white" />
+                  <span className="text-sm font-semibold">Sign in</span>
+                </Button>
               </div>
             </div>
           </div>

@@ -80,10 +80,22 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
               
               <div className="p-6">
                 <div className="flex flex-wrap gap-3 mb-6">
-                  <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
-                    <Play className="w-5 h-5 mr-2" />
-                    Watch Now
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
+                      <Play className="w-5 h-5 mr-2" />
+                      Watch Now
+                    </Button>
+                    <Button size="lg" variant="outline" className="flex items-center gap-2" onClick={() => {
+                      try {
+                        window.dispatchEvent(new CustomEvent('gowatch:saveMovie', { detail: movie }));
+                      } catch (err) {
+                        // ignore
+                      }
+                    }}>
+                      <Star className="w-5 h-5" />
+                      Save
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-6">
