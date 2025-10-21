@@ -7,8 +7,7 @@ import { MovieGrid } from './MovieGrid';
 import { MovieModal } from './MovieModal';
 import { Footer } from './Footer';
 import { ensureDemoUser, getWatchlist, addToWatchlist } from '../lib/watchlist';
-import { WatchlistModal } from './WatchlistModal';
-import { AuthModal } from './AuthModal';
+import GlobalModals from './GlobalModals';
 
 
 const genreMap: { [id: number]: string } = {
@@ -59,6 +58,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [watchlist, setWatchlist] = useState<any[]>([]);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [pendingSave, setPendingSave] = useState<Movie | null>(null);
 
   useEffect(() => {
@@ -122,8 +122,9 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
       if (!movie) return;
       if (!currentUser) {
   // remember the requested movie and open auth modal
-  setPendingSave(movie);
-  try { localStorage.setItem('gowatch_pending_save', JSON.stringify(movie)); } catch {}
+        setPendingSave(movie);
+        try { localStorage.setItem('gowatch_pending_save', JSON.stringify(movie)); } catch {}
+        setAuthMessage('Please sign in or create an account to save this movie to your watchlist.');
         setIsAuthOpen(true);
         return;
       }
@@ -200,11 +201,27 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
     setSelectedMovie(null);
   };
 
-  const openWatchlist = () => setIsWatchlistOpen(true);
-  const closeWatchlist = () => setIsWatchlistOpen(false);
+  const openWatchlist = () => {
+    try { window.dispatchEvent(new CustomEvent('gowatch:openWatchlist')); } catch { /* no-op */ }
+  };
 
-  const openAuth = () => setIsAuthOpen(true);
-  const closeAuth = () => setIsAuthOpen(false);
+  const closeWatchlist = () => {
+    try { window.dispatchEvent(new CustomEvent('gowatch:closeWatchlist')); } catch { /* no-op */ }
+  };
+
+  const openAuth = () => {
+    try { window.dispatchEvent(new CustomEvent('gowatch:openAuth')); } catch { /* no-op */ }
+  };
+
+  const closeAuth = () => {
+    try { window.dispatchEvent(new CustomEvent('gowatch:closeAuth')); } catch { /* no-op */ }
+  };
+
+  // clear auth message when closing auth modal
+  const handleCloseAuth = () => {
+    setIsAuthOpen(false);
+    setAuthMessage(null);
+  };
 
   const handleRemoveFromWatchlist = async (movieId: string) => {
     if (!currentUser) return;
@@ -258,14 +275,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         isOpen={isModalOpen}
         onClose={closeModal}
       />
-      <WatchlistModal isOpen={isWatchlistOpen} onClose={closeWatchlist} watchlist={watchlist} onRemove={handleRemoveFromWatchlist} />
-      <AuthModal isOpen={isAuthOpen} onClose={closeAuth} onLoginSuccess={(user: any) => {
-        setCurrentUser(user);
-        (async () => {
-          const wl = await getWatchlist(user.id);
-          setWatchlist(wl || []);
-        })();
-      }} />
+      <GlobalModals />
       {filteredMovies.length === 0 ? (
         <Footer fixed />
       ) : (
