@@ -7,6 +7,7 @@ import { MovieGrid } from './MovieGrid';
 import { MovieModal } from './MovieModal';
 import { Footer } from './Footer';
 import { ensureDemoUser, getWatchlist, addToWatchlist } from '../lib/watchlist';
+import { setAuthToken } from '../lib/api';
 import GlobalModals from './GlobalModals';
 
 
@@ -69,6 +70,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         setCurrentUser(user);
         (async () => {
           try {
+            try { const t = localStorage.getItem('gowatch_token'); if (t) setAuthToken(t); } catch {}
             const wl = await getWatchlist();
             setWatchlist(wl || []);
           } catch (err) {
@@ -96,9 +98,14 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
             }
                 if (p) {
               try {
-                await addToWatchlist({ id: p.id, title: p.title, poster: p.image });
-                const refreshed = await getWatchlist();
-                setWatchlist(refreshed || []);
+                const r = await addToWatchlist({ id: p.id, title: p.title, poster: p.image });
+                const newItem = r && r.item ? r.item : null;
+                if (newItem) {
+                  setWatchlist(prev => [newItem, ...(prev || []).filter(i => String(i.movieId) !== String(newItem.movieId))]);
+                } else {
+                  const refreshed = await getWatchlist();
+                  setWatchlist(refreshed || []);
+                }
               } catch (err) {
                 console.warn('pending save failed after login', err);
               } finally {
@@ -128,10 +135,15 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         setIsAuthOpen(true);
         return;
       }
-  try {
-  await addToWatchlist({ id: movie.id, title: movie.title, poster: movie.image });
-  const wl = await getWatchlist();
-        setWatchlist(wl || []);
+      try {
+        const r = await addToWatchlist({ id: movie.id, title: movie.title, poster: movie.image });
+        const newItem = r && r.item ? r.item : null;
+        if (newItem) {
+          setWatchlist(prev => [newItem, ...(prev || []).filter(i => String(i.movieId) !== String(newItem.movieId))]);
+        } else {
+          const wl = await getWatchlist();
+          setWatchlist(wl || []);
+        }
         try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Saved to watchlist', type: 'success' } })); } catch {}
       } catch (err) {
         console.warn('save movie failed', err);
@@ -212,6 +224,8 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
 
   const handleLogout = () => {
     try { localStorage.removeItem('gowatch_user'); } catch {}
+    try { localStorage.removeItem('gowatch_token'); } catch {}
+    try { setAuthToken(null); } catch {}
     setCurrentUser(null);
     setWatchlist([]);
     try { window.dispatchEvent(new CustomEvent('gowatch:logout')); } catch {}
@@ -230,9 +244,14 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
     if (!currentUser) return;
     try {
   const { removeFromWatchlist } = await import('../lib/watchlist');
-  await removeFromWatchlist(movieId);
-  const wl = await getWatchlist();
-      setWatchlist(wl || []);
+  const r = await removeFromWatchlist(movieId);
+  // if removal was successful, update state locally
+  if (r && (r.deleted === undefined || r.deleted >= 0)) {
+    setWatchlist(prev => (prev || []).filter(i => String(i.movieId) !== String(movieId)));
+  } else {
+    const wl = await getWatchlist();
+    setWatchlist(wl || []);
+  }
     } catch (err) {
       console.warn('remove failed', err);
     }
