@@ -36,7 +36,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, message }: AuthModa
       }
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.message || 'Auth failed');
+      // Prefer server-provided error message, then stack (for dev), then axios message
+      setError(
+        err?.response?.data?.error || err?.response?.data?.stack || err?.message || 'Auth failed'
+      );
     } finally {
       setLoading(false);
     }
