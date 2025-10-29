@@ -41,7 +41,15 @@ export default function GlobalModals() {
       try {
         const raw = localStorage.getItem('gowatch_user');
         if (raw) {
-          setIsWatchlistOpen(true);
+          // refresh from server so modal is always up-to-date when opened
+          (async () => {
+            try { const t = localStorage.getItem('gowatch_token'); if (t) setAuthToken(t); } catch {}
+            try {
+              const wl = await getWatchlist();
+              setWatchlist(wl || []);
+            } catch {}
+            setIsWatchlistOpen(true);
+          })();
           return;
         }
       } catch {}
@@ -66,11 +74,12 @@ export default function GlobalModals() {
       try {
         const pending = JSON.parse(localStorage.getItem('gowatch_pending_save') || 'null');
         if (pending) {
-            try {
+          try {
             const r = await addToWatchlist({ id: pending.id, title: pending.title, poster: pending.image });
             const newItem = r && r.item ? r.item : null;
             if (newItem) {
               setWatchlist(prev => [newItem, ...(prev || []).filter(i => String(i.movieId) !== String(newItem.movieId))]);
+              try { window.dispatchEvent(new CustomEvent('gowatch:watchlist:added', { detail: newItem })); } catch {}
             } else {
               const refreshed = await getWatchlist();
               setWatchlist(refreshed || []);
@@ -107,6 +116,26 @@ export default function GlobalModals() {
       window.removeEventListener('gowatch:openWatchlist', onOpenWatchlist as EventListener);
       window.removeEventListener('gowatch:login', onLogin as EventListener);
       window.removeEventListener('gowatch:logout', onLogout as EventListener);
+    };
+  }, []);
+
+  // Listen for cross-component watchlist updates to reflect in the modal immediately
+  useEffect(() => {
+    const onAdded = (e: any) => {
+      const item = e?.detail;
+      if (!item) return;
+      setWatchlist(prev => [item, ...(prev || []).filter(i => String(i.movieId) !== String(item.movieId))]);
+    };
+    const onRemoved = (e: any) => {
+      const id = e?.detail?.movieId ?? e?.detail;
+      if (id == null) return;
+      setWatchlist(prev => (prev || []).filter(i => String(i.movieId) !== String(id)));
+    };
+    window.addEventListener('gowatch:watchlist:added', onAdded as EventListener);
+    window.addEventListener('gowatch:watchlist:removed', onRemoved as EventListener);
+    return () => {
+      window.removeEventListener('gowatch:watchlist:added', onAdded as EventListener);
+      window.removeEventListener('gowatch:watchlist:removed', onRemoved as EventListener);
     };
   }, []);
 
@@ -149,6 +178,7 @@ export default function GlobalModals() {
       const r = await removeFromWatchlist(movieId);
       if (r && (r.deleted === undefined || r.deleted >= 0)) {
         setWatchlist(prev => (prev || []).filter(i => String(i.movieId) !== String(movieId)));
+        try { window.dispatchEvent(new CustomEvent('gowatch:watchlist:removed', { detail: { movieId } })); } catch {}
       } else {
         const wl = await getWatchlist();
         setWatchlist(wl || []);
@@ -187,7 +217,7 @@ export default function GlobalModals() {
           onRemove={handleRemove}
         />
       )}
-      
+
       {toastState && (
         <div className={`fixed bottom-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white ${toastState.type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
           {toastState.message}

@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import React from 'react';
 
 interface Movie {
   id: string;
@@ -23,6 +24,34 @@ interface MovieModalProps {
 }
 
 export function MovieModal({ movie, isOpen, onClose, isSaved = false }: MovieModalProps) {
+  const [saved, setSaved] = React.useState<boolean>(!!isSaved);
+
+  // keep local state in sync with prop when movie changes or upstream updates
+  React.useEffect(() => {
+    setSaved(!!isSaved);
+  }, [isSaved, movie?.id]);
+
+  // listen for global watchlist updates to reflect immediately without page refresh
+  React.useEffect(() => {
+    if (!movie) return;
+    const onAdded = (e: any) => {
+      const item = e?.detail;
+      if (!item) return;
+      if (String(item.movieId) === String(movie.id)) setSaved(true);
+    };
+    const onRemoved = (e: any) => {
+      const id = e?.detail?.movieId ?? e?.detail;
+      if (id == null) return;
+      if (String(id) === String(movie.id)) setSaved(false);
+    };
+    window.addEventListener('gowatch:watchlist:added', onAdded as EventListener);
+    window.addEventListener('gowatch:watchlist:removed', onRemoved as EventListener);
+    return () => {
+      window.removeEventListener('gowatch:watchlist:added', onAdded as EventListener);
+      window.removeEventListener('gowatch:watchlist:removed', onRemoved as EventListener);
+    };
+  }, [movie?.id]);
+
   if (!movie) return null;
 
   return (
@@ -89,19 +118,21 @@ export function MovieModal({ movie, isOpen, onClose, isSaved = false }: MovieMod
                     </Button>
                     <Button
                       size="lg"
-                      variant={isSaved ? 'ghost' : 'outline'}
+                      variant={saved ? 'ghost' : 'outline'}
                       className="flex items-center gap-2"
                       onClick={() => {
-                        if (isSaved) return;
+                        if (saved) return;
                         try {
                           window.dispatchEvent(new CustomEvent('gowatch:saveMovie', { detail: movie }));
+                          // optimistically mark as saved; will be corrected by events if the API fails
+                          setSaved(true);
                         } catch (err) {
                         }
                       }}
-                      disabled={isSaved}
+                      disabled={saved}
                     >
                       <Star className="w-5 h-5" />
-                      {isSaved ? 'Saved' : 'Save'}
+                      {saved ? 'Saved' : 'Save'}
                     </Button>
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import { GenreFilter } from './GenreFilter';
 import { MovieGrid } from './MovieGrid';
 import { MovieModal } from './MovieModal';
 import { Footer } from './Footer';
-import { ensureDemoUser, getWatchlist, addToWatchlist } from '../lib/watchlist';
+import { getWatchlist, addToWatchlist } from '../lib/watchlist';
 import { setAuthToken } from '../lib/api';
 import GlobalModals from './GlobalModals';
 
@@ -54,7 +54,6 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [watchlist, setWatchlist] = useState<any[]>([]);
@@ -63,14 +62,15 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   const [pendingSave, setPendingSave] = useState<Movie | null>(null);
 
   useEffect(() => {
+    // Restore session
     try {
       const raw = localStorage.getItem('gowatch_user');
       if (raw) {
         const user = JSON.parse(raw);
         setCurrentUser(user);
+        try { const t = localStorage.getItem('gowatch_token'); if (t) setAuthToken(t); } catch {}
         (async () => {
           try {
-            try { const t = localStorage.getItem('gowatch_token'); if (t) setAuthToken(t); } catch {}
             const wl = await getWatchlist();
             setWatchlist(wl || []);
           } catch (err) {
@@ -78,57 +78,29 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
           }
         })();
       }
-    } catch (err) {
-      // ignore
-    }
+    } catch {}
 
-    const onLogin = (e: any) => {
+    // Login event: refresh watchlist
+    const onLogin = async (e: any) => {
       const user = e?.detail;
-      if (user) {
-        setCurrentUser(user);
-        (async () => {
+      if (!user) return;
+      setCurrentUser(user);
+      try { const t = localStorage.getItem('gowatch_token'); if (t) setAuthToken(t); } catch {}
       try {
         const wl = await getWatchlist();
         setWatchlist(wl || []);
-            // if there was a pending save, complete it now
-            // check pending save from state or localStorage
-            let p = pendingSave;
-            if (!p) {
-              try { p = JSON.parse(localStorage.getItem('gowatch_pending_save') || 'null'); } catch { p = null; }
-            }
-                if (p) {
-              try {
-                const r = await addToWatchlist({ id: p.id, title: p.title, poster: p.image });
-                const newItem = r && r.item ? r.item : null;
-                if (newItem) {
-                  setWatchlist(prev => [newItem, ...(prev || []).filter(i => String(i.movieId) !== String(newItem.movieId))]);
-                } else {
-                  const refreshed = await getWatchlist();
-                  setWatchlist(refreshed || []);
-                }
-              } catch (err) {
-                console.warn('pending save failed after login', err);
-              } finally {
-                setPendingSave(null);
-                try { localStorage.removeItem('gowatch_pending_save'); } catch {}
-              }
-            }
-          } catch (err) {
-            console.warn('could not load watchlist after login', err);
-          }
-        })();
+      } catch (err) {
+        console.warn('could not load watchlist after login', err);
       }
     };
-    window.addEventListener('gowatch:login', onLogin as EventListener);
-    const onOpenAuth = () => setIsAuthOpen(true);
-    window.addEventListener('gowatch:openAuth', onOpenAuth as EventListener);
 
-    // handle save requests from MovieModal or other components
+    const onOpenAuth = () => setIsAuthOpen(true);
+
+    // Save movie requests from other components
     const onSaveMovie = async (e: any) => {
       const movie: Movie | undefined = e?.detail;
       if (!movie) return;
       if (!currentUser) {
-  // remember the requested movie and open auth modal
         setPendingSave(movie);
         try { localStorage.setItem('gowatch_pending_save', JSON.stringify(movie)); } catch {}
         setAuthMessage('Please sign in or create an account to save this movie to your watchlist.');
@@ -140,6 +112,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         const newItem = r && r.item ? r.item : null;
         if (newItem) {
           setWatchlist(prev => [newItem, ...(prev || []).filter(i => String(i.movieId) !== String(newItem.movieId))]);
+          try { window.dispatchEvent(new CustomEvent('gowatch:watchlist:added', { detail: newItem })); } catch {}
         } else {
           const wl = await getWatchlist();
           setWatchlist(wl || []);
@@ -150,14 +123,33 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Failed to save movie', type: 'error' } })); } catch {}
       }
     };
+
+    // Cross-component sync events
+    const onWlAdded = (e: any) => {
+      const item = e?.detail;
+      if (!item) return;
+      setWatchlist(prev => [item, ...(prev || []).filter(i => String(i.movieId) !== String(item.movieId))]);
+    };
+    const onWlRemoved = (e: any) => {
+      const id = e?.detail?.movieId ?? e?.detail;
+      if (id == null) return;
+      setWatchlist(prev => (prev || []).filter(i => String(i.movieId) !== String(id)));
+    };
+
+    window.addEventListener('gowatch:login', onLogin as EventListener);
+    window.addEventListener('gowatch:openAuth', onOpenAuth as EventListener);
     window.addEventListener('gowatch:saveMovie', onSaveMovie as EventListener);
+    window.addEventListener('gowatch:watchlist:added', onWlAdded as EventListener);
+    window.addEventListener('gowatch:watchlist:removed', onWlRemoved as EventListener);
 
     return () => {
       window.removeEventListener('gowatch:login', onLogin as EventListener);
       window.removeEventListener('gowatch:openAuth', onOpenAuth as EventListener);
       window.removeEventListener('gowatch:saveMovie', onSaveMovie as EventListener);
+      window.removeEventListener('gowatch:watchlist:added', onWlAdded as EventListener);
+      window.removeEventListener('gowatch:watchlist:removed', onWlRemoved as EventListener);
     };
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     const TMDB_API_KEY = '6ca1b09b9b4d7b85f93570a942e26c09';
