@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Toaster, toast } from 'sonner';
 import { AuthModal } from './AuthModal';
 import { WatchlistModal } from './WatchlistModal';
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../lib/watchlist';
@@ -10,7 +11,7 @@ export default function GlobalModals() {
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [watchlist, setWatchlist] = useState<any[]>([]);
-  const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' | 'info' } | null>(null);
+  const [toastState, setToastState] = useState<{ message: string; type?: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
     try {
@@ -74,10 +75,10 @@ export default function GlobalModals() {
               const refreshed = await getWatchlist();
               setWatchlist(refreshed || []);
             }
-            try { setToast({ message: 'Saved pending movie to watchlist', type: 'success' }); } catch {}
+            try { setToastState({ message: 'Saved pending movie to watchlist', type: 'success' }); } catch {}
           } catch (err) {
             console.warn('GlobalModals: pending save failed', err);
-            try { setToast({ message: 'Failed to save pending movie', type: 'error' }); } catch {}
+            try { setToastState({ message: 'Failed to save pending movie', type: 'error' }); } catch {}
           } finally {
             localStorage.removeItem('gowatch_pending_save');
           }
@@ -113,8 +114,15 @@ export default function GlobalModals() {
     const onToast = (e: any) => {
       const d = e?.detail;
       if (!d || !d.message) return;
-      setToast({ message: d.message, type: d.type });
-      setTimeout(() => setToast(null), 3500);
+      setToastState({ message: d.message, type: d.type });
+      try {
+        const kind = (d.type || 'success') as 'success' | 'error' | 'info';
+        // @ts-ignore
+        toast[kind] ? (toast as any)[kind](d.message) : toast(d.message);
+      } catch {
+        toast(d.message);
+      }
+      setTimeout(() => setToastState(null), 3500);
     };
     window.addEventListener('gowatch:toast', onToast as EventListener);
     return () => window.removeEventListener('gowatch:toast', onToast as EventListener);
@@ -145,10 +153,10 @@ export default function GlobalModals() {
         const wl = await getWatchlist();
         setWatchlist(wl || []);
       }
-      try { setToast({ message: 'Removed from watchlist', type: 'info' }); } catch {}
+  try { setToastState({ message: 'Removed from watchlist', type: 'info' }); } catch {}
     } catch (err) {
       console.warn('GlobalModals: remove failed', err);
-      try { setToast({ message: 'Failed to remove from watchlist', type: 'error' }); } catch {}
+  try { setToastState({ message: 'Failed to remove from watchlist', type: 'error' }); } catch {}
     }
   };
 
@@ -180,11 +188,12 @@ export default function GlobalModals() {
         />
       )}
       {/* Simple toast */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white ${toast.type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
-          {toast.message}
+      {toastState && (
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white ${toastState.type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
+          {toastState.message}
         </div>
       )}
+      <Toaster richColors position="bottom-right" />
     </>
   );
 }
