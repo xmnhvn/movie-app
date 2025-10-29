@@ -1,7 +1,15 @@
-import { Search, Menu, User, Heart, Home, Film } from 'lucide-react';
+import { Search, Menu, User, Heart, Home, Film, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import GoWatchLogo from './GoWatch-logo.png';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from './ui/dropdown-menu';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -56,13 +64,22 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                 </Button>
                 {currentUser ? (
                   <div className="flex items-center gap-2">
-                    <Button className="h-10 px-3 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2">
-                      <User className="w-4 h-4 text-white" />
-                      <span className="text-sm font-semibold">{currentUser.username}</span>
-                    </Button>
-                    <Button variant="ghost" onClick={() => onLogout && onLogout()} className="h-10 px-3 py-2">
-                      Logout
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button className="h-10 px-3 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2">
+                          <User className="w-4 h-4 text-white" />
+                          <span className="text-sm font-semibold">{currentUser.username}</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-[180px]">
+                        <DropdownMenuLabel className="opacity-80">Signed in as {currentUser.username}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => onLogout && onLogout()} className="text-red-600">
+                          <LogOut className="w-4 h-4" />
+                          Logout
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 ) : (
                   <Button onClick={() => onOpenAuth && onOpenAuth()} className="h-10 px-4 py-2 bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white shadow-lg hover:from-purple-800 hover:via-purple-700 transition-colors rounded-xl flex items-center gap-3">
