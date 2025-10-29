@@ -31,7 +31,7 @@ app.post('/api/users', (req, res) => {
       return res.status(500).json({ error: err.message });
     }
 
-    db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, row) => {
+    db.get(`SELECT id, username, created_at FROM users WHERE username = ?`, [username], (err, row) => {
       if (err) {
         console.error('GET user after insert error:', err);
         return res.status(500).json({ error: err.message });
