@@ -23,7 +23,8 @@ interface HeaderProps {
 }
 
 export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOpenAuth, watchlistCount, currentUser, onLogout }: HeaderProps) {
-  const userName = currentUser?.username || '';
+  const userName = (currentUser?.username || '').trim();
+  const displayName = userName ? userName.charAt(0).toUpperCase() + userName.slice(1) : '';
   const initials = userName
     .split(' ')
     .map((n: string) => n[0])
@@ -63,21 +64,24 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                 <div className="flex items-center ml-4 space-x-4">
                 {currentUser ? (
                   <div className="flex items-center gap-2">
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button className="h-10 px-3 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2">
-                          <User className="w-4 h-4 text-white" />
-                          <span className="text-sm font-semibold">{currentUser.username}</span>
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={currentUser?.avatarUrl || ''} alt={userName} />
+                            <AvatarFallback className="text-[10px] text-black">{initials || 'U'}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-semibold">{displayName}</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="min-w-[220px]">
+                      <DropdownMenuContent align="center" className="w-[280px]">
                         <div className="flex items-center justify-between px-2 py-2">
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
                               <AvatarImage src={currentUser?.avatarUrl || ''} alt={userName} />
                               <AvatarFallback className="text-[10px]">{initials || 'U'}</AvatarFallback>
                             </Avatar>
-                            <span className="text-sm font-medium">{userName}</span>
+                            <span className="text-sm font-medium">{displayName}</span>
                           </div>
                           <MoreHorizontal className="w-4 h-4 text-gray-400" />
                         </div>
@@ -87,7 +91,7 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                           <span>Watchlist</span>
                           {typeof watchlistCount === 'number' && watchlistCount > 0 && (
                             <span
-                              className="ml-auto pointer-events-none select-none h-5 min-w-[1.25rem] px-1 inline-flex items-center justify-center rounded-full bg-red-500 text-black text-[10px] font-bold"
+                              className="ml-auto pointer-events-none select-none h-5 min-w-[1.25rem] px-1 inline-flex items-center justify-center rounded-full bg-red-500 text-purple-100 text-[10px] font-bold"
                               aria-label={`Watchlist items: ${watchlistCount}`}
                             >
                               {watchlistCount > 99 ? '99+' : watchlistCount}
