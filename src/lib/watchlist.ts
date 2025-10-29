@@ -5,19 +5,17 @@ export async function ensureDemoUser(username = 'demo') {
   return res.data.user;
 }
 
-// Server expects the userId to be provided. Frontend callers should pass the
-// authenticated user's id when calling these helpers.
-export async function addToWatchlist(userId: string, movie: any) {
-  const res = await api.post('/watchlist', { userId, movie });
+export async function addToWatchlist(movie: any) {
+  const res = await api.post('/watchlist', { movie });
   return res.data;
 }
 
-export async function removeFromWatchlist(userId: string, movieId: string) {
-  const res = await api.delete(`/watchlist/${encodeURIComponent(userId)}/${encodeURIComponent(movieId)}`);
+export async function removeFromWatchlist(movieId: string) {
+  const res = await api.delete(`/watchlist/${encodeURIComponent(movieId)}`);
   return res.data;
 }
 
-export async function getWatchlist(userId: string) {
-  const res = await api.get(`/watchlist/${encodeURIComponent(userId)}`);
+export async function getWatchlist() {
+  const res = await api.get(`/watchlist`);
   return res.data.watchlist;
 }

@@ -69,7 +69,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         setCurrentUser(user);
         (async () => {
           try {
-            const wl = await getWatchlist(user.id);
+            const wl = await getWatchlist();
             setWatchlist(wl || []);
           } catch (err) {
             console.warn('could not load watchlist on restore', err);
@@ -86,7 +86,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         setCurrentUser(user);
         (async () => {
       try {
-        const wl = await getWatchlist(user.id);
+        const wl = await getWatchlist();
         setWatchlist(wl || []);
             // if there was a pending save, complete it now
             // check pending save from state or localStorage
@@ -96,8 +96,8 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
             }
                 if (p) {
               try {
-                await addToWatchlist(user.id, { id: p.id, title: p.title, poster: p.image });
-                const refreshed = await getWatchlist(user.id);
+                await addToWatchlist({ id: p.id, title: p.title, poster: p.image });
+                const refreshed = await getWatchlist();
                 setWatchlist(refreshed || []);
               } catch (err) {
                 console.warn('pending save failed after login', err);
@@ -128,9 +128,9 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         setIsAuthOpen(true);
         return;
       }
-      try {
-        await addToWatchlist(currentUser.id, { id: movie.id, title: movie.title, poster: movie.image });
-        const wl = await getWatchlist(currentUser.id);
+  try {
+  await addToWatchlist({ id: movie.id, title: movie.title, poster: movie.image });
+  const wl = await getWatchlist();
         setWatchlist(wl || []);
         try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Saved to watchlist', type: 'success' } })); } catch {}
       } catch (err) {
@@ -229,9 +229,9 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   const handleRemoveFromWatchlist = async (movieId: string) => {
     if (!currentUser) return;
     try {
-      const { removeFromWatchlist } = await import('../lib/watchlist');
-      await removeFromWatchlist(currentUser.id, movieId);
-      const wl = await getWatchlist(currentUser.id);
+  const { removeFromWatchlist } = await import('../lib/watchlist');
+  await removeFromWatchlist(movieId);
+  const wl = await getWatchlist();
       setWatchlist(wl || []);
     } catch (err) {
       console.warn('remove failed', err);
