@@ -1,0 +1,1 @@
+import{a as r}from"./index-Z8U9h7iV.js";const t=r.create({baseURL:"/api"});async function e(a,s){return(await t.post("/auth/signup",{username:a,password:s})).data.user}async function i(a,s){return(await t.post("/auth/login",{username:a,password:s})).data.user}export{i as login,e as signup};

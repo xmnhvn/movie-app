@@ -60,14 +60,24 @@ export default function GlobalModals() {
       } catch {}
     };
 
+    const onLogout = () => {
+      setCurrentUser(null);
+      setWatchlist([]);
+      setIsAuthOpen(false);
+      setIsWatchlistOpen(false);
+      try { localStorage.removeItem('gowatch_user'); } catch {}
+    };
+
     window.addEventListener('gowatch:openAuth', onOpenAuth as EventListener);
     window.addEventListener('gowatch:openWatchlist', onOpenWatchlist as EventListener);
     window.addEventListener('gowatch:login', onLogin as EventListener);
+    window.addEventListener('gowatch:logout', onLogout as EventListener);
 
     return () => {
       window.removeEventListener('gowatch:openAuth', onOpenAuth as EventListener);
       window.removeEventListener('gowatch:openWatchlist', onOpenWatchlist as EventListener);
       window.removeEventListener('gowatch:login', onLogin as EventListener);
+      window.removeEventListener('gowatch:logout', onLogout as EventListener);
     };
   }, []);
 

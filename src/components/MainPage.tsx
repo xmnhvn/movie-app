@@ -213,6 +213,13 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
     try { window.dispatchEvent(new CustomEvent('gowatch:openAuth')); } catch { /* no-op */ }
   };
 
+  const handleLogout = () => {
+    try { localStorage.removeItem('gowatch_user'); } catch {}
+    setCurrentUser(null);
+    setWatchlist([]);
+    try { window.dispatchEvent(new CustomEvent('gowatch:logout')); } catch {}
+  };
+
   const closeAuth = () => {
     try { window.dispatchEvent(new CustomEvent('gowatch:closeAuth')); } catch { /* no-op */ }
   };
@@ -236,7 +243,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#EFE4F4' }}>
-  <Header onSearch={setSearchQuery} showNavigation onOpenWatchlist={openWatchlist} onOpenAuth={openAuth} watchlistCount={watchlist.length} />
+  <Header onSearch={setSearchQuery} showNavigation onOpenWatchlist={openWatchlist} onOpenAuth={openAuth} watchlistCount={watchlist.length} currentUser={currentUser} onLogout={handleLogout} />
       <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8 pb-32 mt-40">
         <br />
         <br />

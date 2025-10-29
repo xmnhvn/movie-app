@@ -9,9 +9,11 @@ interface HeaderProps {
   onOpenWatchlist?: () => void;
   onOpenAuth?: () => void;
   watchlistCount?: number;
+  currentUser?: any;
+  onLogout?: () => void;
 }
 
-export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOpenAuth, watchlistCount }: HeaderProps) {
+export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOpenAuth, watchlistCount, currentUser, onLogout }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-gray-800">
       <div className="relative z-10 px-4 py-6 lg:px-8">
@@ -52,10 +54,22 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                     <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white">{watchlistCount}</span>
                   )}
                 </Button>
-                <Button onClick={() => onOpenAuth && onOpenAuth()} className="h-10 px-4 py-2 bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white shadow-lg hover:from-purple-800 hover:via-purple-700 transition-colors rounded-xl flex items-center gap-3">
-                  <User className="w-5 h-5 text-white" />
-                  <span className="text-sm font-semibold">Sign in</span>
-                </Button>
+                {currentUser ? (
+                  <div className="flex items-center gap-2">
+                    <Button className="h-10 px-3 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2">
+                      <User className="w-4 h-4 text-white" />
+                      <span className="text-sm font-semibold">{currentUser.username}</span>
+                    </Button>
+                    <Button variant="ghost" onClick={() => onLogout && onLogout()} className="h-10 px-3 py-2">
+                      Logout
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={() => onOpenAuth && onOpenAuth()} className="h-10 px-4 py-2 bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white shadow-lg hover:from-purple-800 hover:via-purple-700 transition-colors rounded-xl flex items-center gap-3">
+                    <User className="w-5 h-5 text-white" />
+                    <span className="text-sm font-semibold">Sign in</span>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
