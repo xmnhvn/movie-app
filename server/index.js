@@ -10,6 +10,16 @@ const PORT = process.env.PORT || 8000;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Simple request logger to aid debugging (will log bodies for JSON requests)
+app.use((req, res, next) => {
+  try {
+    console.log(`[REQ] ${req.method} ${req.url}`, req.body && Object.keys(req.body).length ? req.body : '');
+  } catch (e) {
+    // ignore logging errors
+  }
+  next();
+});
+
 app.post('/api/users', (req, res) => {
   const { username } = req.body;
   if (!username) return res.status(400).json({ error: 'username required' });
@@ -33,6 +43,7 @@ app.post('/api/users', (req, res) => {
 
 app.post('/api/auth/signup', (req, res) => {
   try {
+    console.log('POST /api/auth/signup body:', req.body);
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
 
@@ -40,7 +51,7 @@ app.post('/api/auth/signup', (req, res) => {
     const insert = `INSERT INTO users (username, password) VALUES (?, ?)`;
     db.run(insert, [username, hashed], function(err) {
       if (err) {
-        console.error('POST /api/auth/signup db.run error:', err);
+        console.error('POST /api/auth/signup db.run error:', err && err.message ? err.message : err);
         if (err.message && err.message.includes('UNIQUE')) return res.status(409).json({ error: 'username exists' });
         return res.status(500).json({ error: err.message });
       }
@@ -53,7 +64,7 @@ app.post('/api/auth/signup', (req, res) => {
       });
     });
   } catch (err) {
-    console.error('POST /api/auth/signup uncaught error:', err);
+    console.error('POST /api/auth/signup uncaught error:', err && err.stack ? err.stack : err);
     return res.status(500).json({ error: err?.message || 'internal' });
   }
 });
@@ -117,8 +128,15 @@ app.delete('/api/watchlist/:userId/:movieId', (req, res) => {
 });
 
 function startServer(port, attempts = 0, maxAttempts = 5) {
-  const server = app.listen(port, () => {
-    console.log(`GoWatch server listening on port ${port}`);
+  const server = app.listen(port, '0.0.0.0', () => {
+    const addr = server.address();
+    try {
+      const host = addr && addr.address ? addr.address : '0.0.0.0';
+      const p = addr && addr.port ? addr.port : port;
+      console.log(`GoWatch server listening on ${host}:${p}`);
+    } catch (e) {
+      console.log(`GoWatch server listening on port ${port}`);
+    }
   });
 
   server.on('error', (err) => {
@@ -138,5 +156,11 @@ function startServer(port, attempts = 0, maxAttempts = 5) {
     }
   });
 }
+
+// Express error handler to catch any unhandled errors and log them
+app.use((err, req, res, next) => {
+  console.error('Unhandled server error:', err && err.stack ? err.stack : err);
+  try { res.status(500).json({ error: err?.message || String(err) }); } catch (e) { /* noop */ }
+});
 
 startServer(PORT);

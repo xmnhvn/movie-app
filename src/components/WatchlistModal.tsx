@@ -23,7 +23,6 @@ export function WatchlistModal({ isOpen, onClose, watchlist, onRemove }: Watchli
         <div className="p-6 w-full">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold">My Watchlist</h3>
-            <Button variant="ghost" onClick={onClose}>Close</Button>
           </div>
           {watchlist.length === 0 ? (
             <p className="text-sm text-gray-600">Your watchlist is empty.</p>
