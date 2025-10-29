@@ -3,19 +3,19 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./db');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
+const JWT_SECRET = process.env.GOWATCH_JWT_SECRET || 'change-me-in-prod';
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Simple request logger to aid debugging (will log bodies for JSON requests)
 app.use((req, res, next) => {
   try {
     console.log(`[REQ] ${req.method} ${req.url}`, req.body && Object.keys(req.body).length ? req.body : '');
   } catch (e) {
-    // ignore logging errors
   }
   next();
 });
@@ -60,7 +60,9 @@ app.post('/api/auth/signup', (req, res) => {
           console.error('POST /api/auth/signup db.get error:', err);
           return res.status(500).json({ error: err.message });
         }
-        res.json({ user: row });
+
+        const token = jwt.sign({ id: row.id, username: row.username }, JWT_SECRET, { expiresIn: '30d' });
+        res.json({ user: row, token });
       });
     });
   } catch (err) {
@@ -69,6 +71,10 @@ app.post('/api/auth/signup', (req, res) => {
   }
 });
 
+// NOTE: a single login handler with token issuance is defined below; the
+// earlier/duplicate handler was removed to ensure clients receive the JWT.
+
+// enhance login to return token as well
 app.post('/api/auth/login', (req, res) => {
   try {
     const { username, password } = req.body;
@@ -83,7 +89,8 @@ app.post('/api/auth/login', (req, res) => {
       const ok = bcrypt.compareSync(password, row.password || '');
       if (!ok) return res.status(401).json({ error: 'invalid credentials' });
 
-      res.json({ user: { id: row.id, username: row.username } });
+      const token = jwt.sign({ id: row.id, username: row.username }, JWT_SECRET, { expiresIn: '30d' });
+      res.json({ user: { id: row.id, username: row.username }, token });
     });
   } catch (err) {
     console.error('POST /api/auth/login uncaught error:', err);
@@ -95,31 +102,75 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, pid: process.pid });
 });
 
+// Authentication middleware: verifies Authorization: Bearer <token>
+function authenticateToken(req, res, next) {
+  const auth = req.headers && req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'missing authorization header' });
+  const parts = auth.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') return res.status(401).json({ error: 'invalid authorization header' });
+  const token = parts[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    return next();
+  } catch (err) {
+    return res.status(401).json({ error: 'invalid token' });
+  }
+}
 
-app.post('/api/watchlist', (req, res) => {
-  const { userId, movie } = req.body;
+
+app.post('/api/watchlist', authenticateToken, (req, res) => {
+  // Use the authenticated user id from the token; ignore any client-supplied userId.
+  const userId = req.user && req.user.id;
+  const { movie } = req.body;
   if (!userId || !movie || !movie.id) return res.status(400).json({ error: 'userId and movie.id required' });
 
   const { id: movieId, title, poster } = movie;
 
-  const insert = `INSERT INTO watchlist (user_id, movie_id, title, poster) VALUES (?, ?, ?, ?)`;
-  db.run(insert, [userId, movieId, title || '', poster || ''], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ id: this.lastID, userId, movieId, title, poster });
+  const check = `SELECT id, movie_id as movieId, title, poster, created_at FROM watchlist WHERE user_id = ? AND movie_id = ?`;
+  db.get(check, [userId, movieId], (err, row) => {
+    if (err) {
+      console.error('GET watchlist check error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    if (row) {
+      return res.json({ saved: true, item: row });
+    }
+
+    const insert = `INSERT INTO watchlist (user_id, movie_id, title, poster) VALUES (?, ?, ?, ?)`;
+    db.run(insert, [userId, movieId, title || '', poster || ''], function(err) {
+      if (err) {
+        console.error('POST /api/watchlist db.run error:', err);
+        return res.status(500).json({ error: err.message });
+      }
+      db.get(`SELECT movie_id as movieId, title, poster, created_at FROM watchlist WHERE id = ?`, [this.lastID], (err2, newRow) => {
+        if (err2) {
+          console.error('GET watchlist after insert error:', err2);
+          return res.status(500).json({ error: err2.message });
+        }
+        res.json({ saved: true, item: newRow });
+      });
+    });
   });
 });
 
-app.get('/api/watchlist/:userId', (req, res) => {
-  const userId = req.params.userId;
-  const query = `SELECT movie_id as movieId, title, poster, created_at FROM watchlist WHERE user_id = ? ORDER BY created_at DESC`;
+app.get('/api/watchlist/:userId', authenticateToken, (req, res) => {
+  // Only allow access to the authenticated user's watchlist.
+  const requestedId = req.params.userId;
+  const userId = req.user && String(req.user.id);
+  if (!userId || String(requestedId) !== String(userId)) return res.status(403).json({ error: 'forbidden' });
+  const query = `SELECT movie_id as movieId, title, poster, MAX(created_at) as created_at FROM watchlist WHERE user_id = ? GROUP BY movie_id ORDER BY created_at DESC`;
   db.all(query, [userId], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ watchlist: rows });
   });
 });
 
-app.delete('/api/watchlist/:userId/:movieId', (req, res) => {
-  const { userId, movieId } = req.params;
+app.delete('/api/watchlist/:userId/:movieId', authenticateToken, (req, res) => {
+  const requestedId = req.params.userId;
+  const userId = req.user && String(req.user.id);
+  if (!userId || String(requestedId) !== String(userId)) return res.status(403).json({ error: 'forbidden' });
+  const { movieId } = req.params;
   const del = `DELETE FROM watchlist WHERE user_id = ? AND movie_id = ?`;
   db.run(del, [userId, movieId], function(err) {
     if (err) return res.status(500).json({ error: err.message });
@@ -157,7 +208,6 @@ function startServer(port, attempts = 0, maxAttempts = 5) {
   });
 }
 
-// Express error handler to catch any unhandled errors and log them
 app.use((err, req, res, next) => {
   console.error('Unhandled server error:', err && err.stack ? err.stack : err);
   try { res.status(500).json({ error: err?.message || String(err) }); } catch (e) { /* noop */ }
