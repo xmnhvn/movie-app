@@ -7,6 +7,7 @@ import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../lib/watchl
 export default function GlobalModals() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [watchlist, setWatchlist] = useState<any[]>([]);
 
@@ -28,8 +29,27 @@ export default function GlobalModals() {
       }
     } catch {}
 
-    const onOpenAuth = () => setIsAuthOpen(true);
-    const onOpenWatchlist = () => setIsWatchlistOpen(true);
+    const onOpenAuth = (e?: any) => {
+      // allow optionally passing a message via event.detail
+      const msg = e?.detail?.message || null;
+      setAuthMessage(msg);
+      setIsAuthOpen(true);
+    };
+
+    const onOpenWatchlist = () => {
+      // check persisted user at the time of opening (avoid stale closure over currentUser)
+      try {
+        const raw = localStorage.getItem('gowatch_user');
+        if (raw) {
+          setIsWatchlistOpen(true);
+          return;
+        }
+      } catch {}
+
+      // not signed in -> open auth modal with instructive message
+      setAuthMessage('Please Login in or Create an Account to open watchlist.');
+      setIsAuthOpen(true);
+    };
 
     const onLogin = async (e: any) => {
       const user = e?.detail;
@@ -65,6 +85,7 @@ export default function GlobalModals() {
       setWatchlist([]);
       setIsAuthOpen(false);
       setIsWatchlistOpen(false);
+      setAuthMessage(null);
       try { localStorage.removeItem('gowatch_user'); } catch {}
     };
 
@@ -112,12 +133,17 @@ export default function GlobalModals() {
       {isAuthOpen && (
         <AuthModal
           isOpen={isAuthOpen}
-          onClose={closeAuth}
+          onClose={() => {
+            closeAuth();
+            setAuthMessage(null);
+          }}
           onLoginSuccess={async (user: any) => {
             try { localStorage.setItem('gowatch_user', JSON.stringify(user)); } catch {}
             window.dispatchEvent(new CustomEvent('gowatch:login', { detail: user }));
             setIsAuthOpen(false);
+            setAuthMessage(null);
           }}
+          message={authMessage}
         />
       )}
 
