@@ -85,16 +85,16 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
       if (user) {
         setCurrentUser(user);
         (async () => {
-          try {
-            const wl = await getWatchlist(user.id);
-            setWatchlist(wl || []);
+      try {
+        const wl = await getWatchlist(user.id);
+        setWatchlist(wl || []);
             // if there was a pending save, complete it now
             // check pending save from state or localStorage
             let p = pendingSave;
             if (!p) {
               try { p = JSON.parse(localStorage.getItem('gowatch_pending_save') || 'null'); } catch { p = null; }
             }
-            if (p) {
+                if (p) {
               try {
                 await addToWatchlist(user.id, { id: p.id, title: p.title, poster: p.image });
                 const refreshed = await getWatchlist(user.id);
@@ -132,8 +132,10 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         await addToWatchlist(currentUser.id, { id: movie.id, title: movie.title, poster: movie.image });
         const wl = await getWatchlist(currentUser.id);
         setWatchlist(wl || []);
+        try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Saved to watchlist', type: 'success' } })); } catch {}
       } catch (err) {
         console.warn('save movie failed', err);
+        try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Failed to save movie', type: 'error' } })); } catch {}
       }
     };
     window.addEventListener('gowatch:saveMovie', onSaveMovie as EventListener);
@@ -160,14 +162,9 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         }));
         setMovies(mapped);
       });
-    // load initial watchlist for demo user if present (no auto-demo user anymore)
+
     (async () => {
       try {
-        // If you want an automatic demo user, uncomment the following lines:
-        // const user = await ensureDemoUser('demo');
-        // setCurrentUser(user);
-        // const wl = await getWatchlist(user.id);
-        // setWatchlist(wl || []);
       } catch (err) {
         console.warn('watchlist init failed', err);
       }
@@ -224,7 +221,6 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
     try { window.dispatchEvent(new CustomEvent('gowatch:closeAuth')); } catch { /* no-op */ }
   };
 
-  // clear auth message when closing auth modal
   const handleCloseAuth = () => {
     setIsAuthOpen(false);
     setAuthMessage(null);
@@ -233,7 +229,8 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   const handleRemoveFromWatchlist = async (movieId: string) => {
     if (!currentUser) return;
     try {
-      await (await import('../lib/watchlist')).removeFromWatchlist(currentUser.id, movieId);
+      const { removeFromWatchlist } = await import('../lib/watchlist');
+      await removeFromWatchlist(currentUser.id, movieId);
       const wl = await getWatchlist(currentUser.id);
       setWatchlist(wl || []);
     } catch (err) {
@@ -281,6 +278,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
         movie={selectedMovie}
         isOpen={isModalOpen}
         onClose={closeModal}
+        isSaved={selectedMovie ? watchlist.map((i) => String(i.movieId)).includes(String(selectedMovie.id)) : false}
       />
       <GlobalModals />
       {filteredMovies.length === 0 ? (

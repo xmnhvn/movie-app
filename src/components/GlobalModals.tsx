@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AuthModal } from './AuthModal';
 import { WatchlistModal } from './WatchlistModal';
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../lib/watchlist';
+import { setAuthToken } from '../lib/api';
 
 // Single, clean implementation of GlobalModals
 export default function GlobalModals() {
@@ -10,27 +11,26 @@ export default function GlobalModals() {
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
-    // restore persisted user
     try {
       const raw = localStorage.getItem('gowatch_user');
       if (raw) {
         const u = JSON.parse(raw);
         setCurrentUser(u);
+        try { const t = localStorage.getItem('gowatch_token'); if (t) setAuthToken(t); } catch {}
         (async () => {
           try {
             const wl = await getWatchlist(u.id);
             setWatchlist(wl || []);
           } catch (err) {
-            // ignore
           }
         })();
       }
     } catch {}
 
     const onOpenAuth = (e?: any) => {
-      // allow optionally passing a message via event.detail
       const msg = e?.detail?.message || null;
       setAuthMessage(msg);
       setIsAuthOpen(true);
@@ -56,9 +56,9 @@ export default function GlobalModals() {
       if (!user) return;
       setCurrentUser(user);
 
-      try {
-        const wl = await getWatchlist(user.id);
-        setWatchlist(wl || []);
+        try {
+            const wl = await getWatchlist(user.id);
+            setWatchlist(wl || []);
       } catch (err) {
         console.warn('GlobalModals: failed to load watchlist after login', err);
       }
@@ -67,12 +67,14 @@ export default function GlobalModals() {
       try {
         const pending = JSON.parse(localStorage.getItem('gowatch_pending_save') || 'null');
         if (pending) {
-          try {
+            try {
             await addToWatchlist(user.id, { id: pending.id, title: pending.title, poster: pending.image });
             const refreshed = await getWatchlist(user.id);
             setWatchlist(refreshed || []);
+            try { setToast({ message: 'Saved pending movie to watchlist', type: 'success' }); } catch {}
           } catch (err) {
             console.warn('GlobalModals: pending save failed', err);
+            try { setToast({ message: 'Failed to save pending movie', type: 'error' }); } catch {}
           } finally {
             localStorage.removeItem('gowatch_pending_save');
           }
@@ -103,6 +105,17 @@ export default function GlobalModals() {
   }, []);
 
   useEffect(() => {
+    const onToast = (e: any) => {
+      const d = e?.detail;
+      if (!d || !d.message) return;
+      setToast({ message: d.message, type: d.type });
+      setTimeout(() => setToast(null), 3500);
+    };
+    window.addEventListener('gowatch:toast', onToast as EventListener);
+    return () => window.removeEventListener('gowatch:toast', onToast as EventListener);
+  }, []);
+
+  useEffect(() => {
     (async () => {
       if (!currentUser) return;
       try {
@@ -123,8 +136,10 @@ export default function GlobalModals() {
       await removeFromWatchlist(currentUser.id, movieId);
       const wl = await getWatchlist(currentUser.id);
       setWatchlist(wl || []);
+      try { setToast({ message: 'Removed from watchlist', type: 'info' }); } catch {}
     } catch (err) {
       console.warn('GlobalModals: remove failed', err);
+      try { setToast({ message: 'Failed to remove from watchlist', type: 'error' }); } catch {}
     }
   };
 
@@ -154,6 +169,12 @@ export default function GlobalModals() {
           watchlist={watchlist}
           onRemove={handleRemove}
         />
+      )}
+      {/* Simple toast */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white ${toast.type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
+          {toast.message}
+        </div>
       )}
     </>
   );

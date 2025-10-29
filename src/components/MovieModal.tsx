@@ -18,9 +18,11 @@ interface MovieModalProps {
   movie: Movie | null;
   isOpen: boolean;
   onClose: () => void;
+  // indicates whether this movie is already in the user's watchlist
+  isSaved?: boolean;
 }
 
-export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
+export function MovieModal({ movie, isOpen, onClose, isSaved = false }: MovieModalProps) {
   if (!movie) return null;
 
   return (
@@ -85,15 +87,21 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
                       <Play className="w-5 h-5 mr-2" />
                       Watch Now
                     </Button>
-                    <Button size="lg" variant="outline" className="flex items-center gap-2" onClick={() => {
-                      try {
-                        window.dispatchEvent(new CustomEvent('gowatch:saveMovie', { detail: movie }));
-                      } catch (err) {
-                        // ignore
-                      }
-                    }}>
+                    <Button
+                      size="lg"
+                      variant={isSaved ? 'ghost' : 'outline'}
+                      className="flex items-center gap-2"
+                      onClick={() => {
+                        if (isSaved) return;
+                        try {
+                          window.dispatchEvent(new CustomEvent('gowatch:saveMovie', { detail: movie }));
+                        } catch (err) {
+                        }
+                      }}
+                      disabled={isSaved}
+                    >
                       <Star className="w-5 h-5" />
-                      Save
+                      {isSaved ? 'Saved' : 'Save'}
                     </Button>
                   </div>
                 </div>
