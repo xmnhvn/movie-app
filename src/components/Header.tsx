@@ -51,17 +51,7 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                 </div>
               </div>
 
-              <div className="flex items-center ml-4 space-x-4">
-                <Button onClick={() => onOpenWatchlist && onOpenWatchlist()} className="h-10 px-4 py-2 relative rounded-xl bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white shadow-lg hover:from-purple-800 hover:via-purple-700 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Heart className="w-5 h-5 stroke-white" strokeWidth={1.5} />
-                    <span className="text-sm font-semibold">Watchlist</span>
-                  </div>
-                  <span className="sr-only">Open watchlist</span>
-                  {typeof watchlistCount === 'number' && watchlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white">{watchlistCount}</span>
-                  )}
-                </Button>
+                <div className="flex items-center ml-4 space-x-4">
                 {currentUser ? (
                   <div className="flex items-center gap-2">
                     <DropdownMenu>
@@ -74,9 +64,22 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                       <DropdownMenuContent align="end" className="min-w-[180px]">
                         <DropdownMenuLabel className="opacity-80">Signed in as {currentUser.username}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => onOpenWatchlist && onOpenWatchlist()} className="flex items-center gap-2">
+                          <Heart className="w-4 h-4" />
+                          <span>Watchlist</span>
+                          {typeof watchlistCount === 'number' && watchlistCount > 0 && (
+                            <span
+                              className="ml-auto pointer-events-none select-none h-5 min-w-[1.25rem] px-1 inline-flex items-center justify-center rounded-full bg-red-500 text-black text-[10px] font-bold"
+                              aria-label={`Watchlist items: ${watchlistCount}`}
+                            >
+                              {watchlistCount > 99 ? '99+' : watchlistCount}
+                            </span>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onLogout && onLogout()} className="text-red-600">
                           <LogOut className="w-4 h-4" />
-                          Logout
+                          Sign Out
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
