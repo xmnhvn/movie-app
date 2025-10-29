@@ -1,7 +1,8 @@
-import { Search, Menu, User, Heart, Home, Film, LogOut } from 'lucide-react';
+import { Search, Menu, User, Heart, Home, Film, LogOut, MoreHorizontal } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import GoWatchLogo from './GoWatch-logo.png';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,14 @@ interface HeaderProps {
 }
 
 export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOpenAuth, watchlistCount, currentUser, onLogout }: HeaderProps) {
+  const userName = currentUser?.username || '';
+  const initials = userName
+    .split(' ')
+    .map((n: string) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-gray-800">
       <div className="relative z-10 px-4 py-6 lg:px-8">
@@ -61,8 +70,17 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                           <span className="text-sm font-semibold">{currentUser.username}</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="min-w-[180px]">
-                        <DropdownMenuLabel className="opacity-80">Signed in as {currentUser.username}</DropdownMenuLabel>
+                      <DropdownMenuContent align="end" className="min-w-[220px]">
+                        <div className="flex items-center justify-between px-2 py-2">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={currentUser?.avatarUrl || ''} alt={userName} />
+                              <AvatarFallback className="text-[10px]">{initials || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm font-medium">{userName}</span>
+                          </div>
+                          <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                        </div>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onOpenWatchlist && onOpenWatchlist()} className="flex items-center gap-2">
                           <Heart className="w-4 h-4" />
