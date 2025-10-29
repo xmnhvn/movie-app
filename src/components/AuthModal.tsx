@@ -24,7 +24,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, message }: AuthModa
       if (mode === 'login') {
         const { login } = await import('../lib/auth');
         const user = await login(username, password);
-        // persist and broadcast login so other parts of the app can react
         try { localStorage.setItem('gowatch_user', JSON.stringify(user)); } catch {}
         window.dispatchEvent(new CustomEvent('gowatch:login', { detail: user }));
         onLoginSuccess && onLoginSuccess(user);
