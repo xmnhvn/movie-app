@@ -206,8 +206,16 @@ function startServer(port, attempts = 0, maxAttempts = 5) {
 }
 
 app.use((err, req, res, next) => {
+  // Always log the full stack server-side
   console.error('Unhandled server error:', err && err.stack ? err.stack : err);
-  try { res.status(500).json({ error: err?.message || String(err) }); } catch (e) { /* noop */ }
+  try {
+    // Expose stack traces in development to help debugging requests from the frontend.
+    const payload = { error: err?.message || String(err) };
+    if (process.env.NODE_ENV !== 'production') {
+      payload.stack = err && err.stack ? err.stack : undefined;
+    }
+    res.status(500).json(payload);
+  } catch (e) { /* noop */ }
 });
 
 // When this file is executed directly, start the server.
