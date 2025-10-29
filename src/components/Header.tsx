@@ -75,16 +75,21 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="center" className="w-[280px]">
-                        <div className="flex items-center justify-between px-2 py-2">
+                        <DropdownMenuItem
+                          className="flex items-center justify-between px-2 py-2 cursor-pointer"
+                          onSelect={(_e: any) => {
+                            try { window.dispatchEvent(new CustomEvent('gowatch:openProfile')); } catch {}
+                          }}
+                        >
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
                               <AvatarImage src={currentUser?.avatarUrl || ''} alt={userName} />
-                              <AvatarFallback className="text-[10px]">{initials || 'U'}</AvatarFallback>
+                              <AvatarFallback className="text-[10px] text-black">{initials || 'U'}</AvatarFallback>
                             </Avatar>
                             <span className="text-sm font-medium">{displayName}</span>
                           </div>
                           <MoreHorizontal className="w-4 h-4 text-gray-400" />
-                        </div>
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onOpenWatchlist && onOpenWatchlist()} className="flex items-center gap-2">
                           <Heart className="w-4 h-4" />
