@@ -4,7 +4,6 @@ import { WatchlistModal } from './WatchlistModal';
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../lib/watchlist';
 import { setAuthToken } from '../lib/api';
 
-// Single, clean implementation of GlobalModals
 export default function GlobalModals() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
@@ -22,7 +21,7 @@ export default function GlobalModals() {
         try { const t = localStorage.getItem('gowatch_token'); if (t) setAuthToken(t); } catch {}
         (async () => {
           try {
-            const wl = await getWatchlist(u.id);
+            const wl = await getWatchlist();
             setWatchlist(wl || []);
           } catch (err) {
           }
@@ -57,19 +56,18 @@ export default function GlobalModals() {
       setCurrentUser(user);
 
         try {
-            const wl = await getWatchlist(user.id);
+            const wl = await getWatchlist();
             setWatchlist(wl || []);
       } catch (err) {
         console.warn('GlobalModals: failed to load watchlist after login', err);
       }
 
-      // attempt pending save
       try {
         const pending = JSON.parse(localStorage.getItem('gowatch_pending_save') || 'null');
         if (pending) {
             try {
-            await addToWatchlist(user.id, { id: pending.id, title: pending.title, poster: pending.image });
-            const refreshed = await getWatchlist(user.id);
+            await addToWatchlist({ id: pending.id, title: pending.title, poster: pending.image });
+            const refreshed = await getWatchlist();
             setWatchlist(refreshed || []);
             try { setToast({ message: 'Saved pending movie to watchlist', type: 'success' }); } catch {}
           } catch (err) {
@@ -119,7 +117,7 @@ export default function GlobalModals() {
     (async () => {
       if (!currentUser) return;
       try {
-        const wl = await getWatchlist(currentUser.id);
+        const wl = await getWatchlist();
         setWatchlist(wl || []);
       } catch (err) {
         console.warn('GlobalModals: failed loading watchlist', err);
@@ -133,8 +131,8 @@ export default function GlobalModals() {
   const handleRemove = async (movieId: string) => {
     if (!currentUser) return;
     try {
-      await removeFromWatchlist(currentUser.id, movieId);
-      const wl = await getWatchlist(currentUser.id);
+      await removeFromWatchlist(movieId);
+      const wl = await getWatchlist();
       setWatchlist(wl || []);
       try { setToast({ message: 'Removed from watchlist', type: 'info' }); } catch {}
     } catch (err) {

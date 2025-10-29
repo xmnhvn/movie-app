@@ -154,11 +154,9 @@ app.post('/api/watchlist', authenticateToken, (req, res) => {
   });
 });
 
-app.get('/api/watchlist/:userId', authenticateToken, (req, res) => {
-  // Only allow access to the authenticated user's watchlist.
-  const requestedId = req.params.userId;
-  const userId = req.user && String(req.user.id);
-  if (!userId || String(requestedId) !== String(userId)) return res.status(403).json({ error: 'forbidden' });
+// Token-protected endpoints that use the authenticated user id from the token
+app.get('/api/watchlist', authenticateToken, (req, res) => {
+  const userId = req.user && req.user.id;
   const query = `SELECT movie_id as movieId, title, poster, MAX(created_at) as created_at FROM watchlist WHERE user_id = ? GROUP BY movie_id ORDER BY created_at DESC`;
   db.all(query, [userId], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -166,11 +164,9 @@ app.get('/api/watchlist/:userId', authenticateToken, (req, res) => {
   });
 });
 
-app.delete('/api/watchlist/:userId/:movieId', authenticateToken, (req, res) => {
-  const requestedId = req.params.userId;
-  const userId = req.user && String(req.user.id);
-  if (!userId || String(requestedId) !== String(userId)) return res.status(403).json({ error: 'forbidden' });
+app.delete('/api/watchlist/:movieId', authenticateToken, (req, res) => {
   const { movieId } = req.params;
+  const userId = req.user && req.user.id;
   const del = `DELETE FROM watchlist WHERE user_id = ? AND movie_id = ?`;
   db.run(del, [userId, movieId], function(err) {
     if (err) return res.status(500).json({ error: err.message });

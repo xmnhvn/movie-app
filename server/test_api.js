@@ -48,21 +48,21 @@ async function req(path, opts = {}) {
       return h;
     };
 
-    // 2) Add to watchlist — first time
-    const movie = { id: 'movie-123', title: 'Test Movie', poster: 'http://example.com/poster.jpg' };
-    console.log('\n2) Add to watchlist (first time)');
-    let a = await req('/watchlist', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ userId: user.id, movie }) });
-    console.log('add1 status', a.status, 'body:', a.body);
+  // 2) Add to watchlist — first time (server uses token to identify user)
+  const movie = { id: 'movie-123', title: 'Test Movie', poster: 'http://example.com/poster.jpg' };
+  console.log('\n2) Add to watchlist (first time)');
+  let a = await req('/watchlist', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ movie }) });
+  console.log('add1 status', a.status, 'body:', a.body);
 
-    // 3) Add to watchlist — second time
-    console.log('\n3) Add to watchlist (second time)');
-    let b = await req('/watchlist', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ userId: user.id, movie }) });
-    console.log('add2 status', b.status, 'body:', b.body);
+  // 3) Add to watchlist — second time (should dedupe)
+  console.log('\n3) Add to watchlist (second time)');
+  let b = await req('/watchlist', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ movie }) });
+  console.log('add2 status', b.status, 'body:', b.body);
 
-    // 4) Get watchlist
-    console.log('\n4) Get watchlist');
-    const g = await req(`/watchlist/${user.id}`, { headers: authHeaders() });
-    console.log('get status', g.status, 'body:', g.body);
+  // 4) Get watchlist
+  console.log('\n4) Get watchlist');
+  const g = await req(`/watchlist`, { headers: authHeaders() });
+  console.log('get status', g.status, 'body:', g.body);
 
     console.log('\nTest script finished.');
   } catch (err) {

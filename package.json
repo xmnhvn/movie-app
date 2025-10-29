@@ -53,10 +53,13 @@
             "@types/react": "^19.2.2",
             "@types/react-dom": "^19.2.1",
             "@vitejs/plugin-react-swc": "^3.10.2",
-            "vite": "^6.4.1"
+            "vite": "^6.4.1",
+            "concurrently": "^8.2.0"
       },
       "scripts": {
-            "dev": "vite",
+            "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+            "dev:server": "npm run dev --prefix server",
+            "dev:client": "vite",
             "build": "vite build"
       }
 }
