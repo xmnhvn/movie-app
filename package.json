@@ -60,6 +60,9 @@
             "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
             "dev:server": "npm run dev --prefix server",
             "dev:client": "vite",
-            "build": "vite build"
+            "build": "vite build",
+            "preview": "vite preview --outDir build --port 3000",
+            "start:server": "npm run start --prefix server",
+            "reset-db": "node server/reset_db.js"
       }
 }

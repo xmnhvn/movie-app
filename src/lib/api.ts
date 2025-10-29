@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-export const api = axios.create({ baseURL: '/api' });
+const envBase = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || '';
+const baseURL = envBase ? `${envBase.replace(/\/$/, '')}/api` : '/api';
+
+export const api = axios.create({ baseURL });
 
 export function setAuthToken(token: string | null) {
   if (token) {
@@ -10,10 +13,22 @@ export function setAuthToken(token: string | null) {
   }
 }
 
-// On module load, restore token from localStorage (so dev server + page reloads keep auth)
 try {
   const t = localStorage.getItem('gowatch_token');
   if (t) setAuthToken(t);
 } catch (e) {
-  // ignore
 }
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const status = err?.response?.status;
+    if (status === 401) {
+      try { localStorage.removeItem('gowatch_token'); } catch {}
+      try { localStorage.removeItem('gowatch_user'); } catch {}
+      try { setAuthToken(null); } catch {}
+      try { window.dispatchEvent(new CustomEvent('gowatch:openAuth', { detail: { message: 'Session expired. Please sign in again.' } })); } catch {}
+    }
+    return Promise.reject(err);
+  }
+);
