@@ -202,6 +202,7 @@ function startServer(port, attempts = 0, maxAttempts = 5) {
       process.exit(1);
     }
   });
+  return server;
 }
 
 app.use((err, req, res, next) => {
@@ -209,4 +210,10 @@ app.use((err, req, res, next) => {
   try { res.status(500).json({ error: err?.message || String(err) }); } catch (e) { /* noop */ }
 });
 
-startServer(PORT);
+// When this file is executed directly, start the server.
+// When required (e.g., from tests), export app and startServer without binding automatically.
+if (require.main === module) {
+  startServer(PORT);
+}
+
+module.exports = { app, startServer };

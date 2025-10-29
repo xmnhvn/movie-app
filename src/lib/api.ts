@@ -9,3 +9,11 @@ export function setAuthToken(token: string | null) {
     delete api.defaults.headers.common['Authorization'];
   }
 }
+
+// On module load, restore token from localStorage (so dev server + page reloads keep auth)
+try {
+  const t = localStorage.getItem('gowatch_token');
+  if (t) setAuthToken(t);
+} catch (e) {
+  // ignore
+}

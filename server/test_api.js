@@ -1,6 +1,8 @@
 const fetch = globalThis.fetch || require('node-fetch');
+const { startServer } = require('./index');
 
-const base = 'http://127.0.0.1:8000/api';
+const PORT = 8000;
+const base = `http://127.0.0.1:${PORT}/api`;
 
 async function req(path, opts = {}) {
   const res = await fetch(base + path, opts);
@@ -12,6 +14,23 @@ async function req(path, opts = {}) {
 
 (async function run() {
   try {
+    // Start the API server programmatically to avoid terminal session conflicts
+    const server = startServer(PORT);
+    // Wait until /api/health responds or timeout after ~3s
+    const deadline = Date.now() + 3000;
+    while (true) {
+      try {
+        const r = await req('/health');
+        if (r.status === 200) break;
+      } catch {}
+      if (Date.now() > deadline) {
+        console.error('Server did not become healthy in time');
+        server && server.close && server.close();
+        process.exit(1);
+      }
+      await new Promise(r => setTimeout(r, 100));
+    }
+
     console.log('Testing API against', base);
 
     // 1) Signup (may return 409 if exists)
@@ -65,6 +84,8 @@ async function req(path, opts = {}) {
   console.log('get status', g.status, 'body:', g.body);
 
     console.log('\nTest script finished.');
+    // Gracefully stop the server after tests
+    server && server.close && server.close();
   } catch (err) {
     console.error('Test script error:', err);
     process.exit(1);

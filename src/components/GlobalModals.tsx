@@ -54,8 +54,8 @@ export default function GlobalModals() {
       const user = e?.detail;
       if (!user) return;
       setCurrentUser(user);
-
-        try {
+      try { const t = localStorage.getItem('gowatch_token'); if (t) setAuthToken(t); } catch {}
+      try {
             const wl = await getWatchlist();
             setWatchlist(wl || []);
       } catch (err) {
@@ -66,9 +66,14 @@ export default function GlobalModals() {
         const pending = JSON.parse(localStorage.getItem('gowatch_pending_save') || 'null');
         if (pending) {
             try {
-            await addToWatchlist({ id: pending.id, title: pending.title, poster: pending.image });
-            const refreshed = await getWatchlist();
-            setWatchlist(refreshed || []);
+            const r = await addToWatchlist({ id: pending.id, title: pending.title, poster: pending.image });
+            const newItem = r && r.item ? r.item : null;
+            if (newItem) {
+              setWatchlist(prev => [newItem, ...(prev || []).filter(i => String(i.movieId) !== String(newItem.movieId))]);
+            } else {
+              const refreshed = await getWatchlist();
+              setWatchlist(refreshed || []);
+            }
             try { setToast({ message: 'Saved pending movie to watchlist', type: 'success' }); } catch {}
           } catch (err) {
             console.warn('GlobalModals: pending save failed', err);
@@ -87,6 +92,8 @@ export default function GlobalModals() {
       setIsWatchlistOpen(false);
       setAuthMessage(null);
       try { localStorage.removeItem('gowatch_user'); } catch {}
+      try { localStorage.removeItem('gowatch_token'); } catch {}
+      try { setAuthToken(null); } catch {}
     };
 
     window.addEventListener('gowatch:openAuth', onOpenAuth as EventListener);
@@ -131,9 +138,13 @@ export default function GlobalModals() {
   const handleRemove = async (movieId: string) => {
     if (!currentUser) return;
     try {
-      await removeFromWatchlist(movieId);
-      const wl = await getWatchlist();
-      setWatchlist(wl || []);
+      const r = await removeFromWatchlist(movieId);
+      if (r && (r.deleted === undefined || r.deleted >= 0)) {
+        setWatchlist(prev => (prev || []).filter(i => String(i.movieId) !== String(movieId)));
+      } else {
+        const wl = await getWatchlist();
+        setWatchlist(wl || []);
+      }
       try { setToast({ message: 'Removed from watchlist', type: 'info' }); } catch {}
     } catch (err) {
       console.warn('GlobalModals: remove failed', err);
