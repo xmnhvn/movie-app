@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Toaster, toast } from 'sonner';
 import { AuthModal } from './AuthModal';
 import { WatchlistModal } from './WatchlistModal';
+import { ProfileModal } from './ProfileModal';
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../lib/watchlist';
 import { setAuthToken } from '../lib/api';
 
 export default function GlobalModals() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [watchlist, setWatchlist] = useState<any[]>([]);
@@ -59,7 +61,7 @@ export default function GlobalModals() {
       setIsAuthOpen(true);
     };
 
-    const onLogin = async (e: any) => {
+  const onLogin = async (e: any) => {
       const user = e?.detail;
       if (!user) return;
       setCurrentUser(user);
@@ -106,14 +108,30 @@ export default function GlobalModals() {
       try { setAuthToken(null); } catch {}
     };
 
+    const onOpenProfile = () => {
+      try {
+        const raw = localStorage.getItem('gowatch_user');
+        if (!raw) {
+          setAuthMessage('Please Login in or Create an Account to view profile.');
+          setIsAuthOpen(true);
+          return;
+        }
+        setIsProfileOpen(true);
+      } catch {
+        setIsProfileOpen(true);
+      }
+    };
+
     window.addEventListener('gowatch:openAuth', onOpenAuth as EventListener);
     window.addEventListener('gowatch:openWatchlist', onOpenWatchlist as EventListener);
+    window.addEventListener('gowatch:openProfile', onOpenProfile as EventListener);
     window.addEventListener('gowatch:login', onLogin as EventListener);
     window.addEventListener('gowatch:logout', onLogout as EventListener);
 
     return () => {
       window.removeEventListener('gowatch:openAuth', onOpenAuth as EventListener);
       window.removeEventListener('gowatch:openWatchlist', onOpenWatchlist as EventListener);
+      window.removeEventListener('gowatch:openProfile', onOpenProfile as EventListener);
       window.removeEventListener('gowatch:login', onLogin as EventListener);
       window.removeEventListener('gowatch:logout', onLogout as EventListener);
     };
@@ -171,6 +189,7 @@ export default function GlobalModals() {
 
   const closeAuth = () => setIsAuthOpen(false);
   const closeWatchlist = () => setIsWatchlistOpen(false);
+  const closeProfile = () => setIsProfileOpen(false);
 
   const handleRemove = async (movieId: string) => {
     if (!currentUser) return;
@@ -216,6 +235,10 @@ export default function GlobalModals() {
           watchlist={watchlist}
           onRemove={handleRemove}
         />
+      )}
+
+      {isProfileOpen && (
+        <ProfileModal isOpen={isProfileOpen} onClose={closeProfile} user={currentUser} />
       )}
 
       {toastState && (
