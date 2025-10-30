@@ -69,9 +69,7 @@ export function WatchlistModal({
   };
 
   const confirmDelete = () => {
-    if (selectedItems.length > 0) {
-      setShowConfirm(true);
-    }
+    if (selectedItems.length > 0) setShowConfirm(true);
   };
 
   const cancelDelete = () => setShowConfirm(false);
@@ -83,7 +81,6 @@ export function WatchlistModal({
     setShowConfirm(false);
   };
 
-  // ✅ Auto-adjust page after deletions
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages);
@@ -118,7 +115,6 @@ export function WatchlistModal({
               </span>
             </div>
 
-            {/* Right-side controls */}
             {editMode ? (
               <div className="mr-2 flex items-center gap-2">
                 <Button
@@ -175,11 +171,14 @@ export function WatchlistModal({
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 justify-items-center">
+                <div
+                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 justify-items-center mb-6"
+                  style={{ minHeight: '462px' }}
+                >
                   {currentItems.map((item) => (
                     <div key={item.movieId} className="relative w-[110px]">
                       <div className="relative rounded-md overflow-hidden border border-gray-200 bg-white">
-                        {editMode && (
+                        {editMode && (  
                           <button
                             onClick={() => toggleSelect(item.movieId)}
                             className="absolute top-2 left-2 z-10 bg-white/90 rounded-sm p-1 hover:bg-white"
@@ -209,7 +208,7 @@ export function WatchlistModal({
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-4 mt-4 shrink-0">
+                  <div className="flex items-center justify-center gap-2 mt-auto pb-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -238,6 +237,7 @@ export function WatchlistModal({
           </div>
         </div>
 
+        {/* Confirm Delete Modal */}
         {showConfirm && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg p-6 w-[320px] text-center">
