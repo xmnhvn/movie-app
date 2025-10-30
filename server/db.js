@@ -37,12 +37,22 @@ db.serialize(() => {
       return;
     }
     const hasPassword = rows && rows.some(r => r.name === 'password');
+    const hasAvatarUrl = rows && rows.some(r => r.name === 'avatar_url');
     if (!hasPassword) {
       db.run(`ALTER TABLE users ADD COLUMN password TEXT`, (err) => {
         if (err) {
           console.warn('Could not add password column to users table:', err.message);
         } else {
           console.log('Migration: added password column to users table');
+        }
+      });
+    }
+    if (!hasAvatarUrl) {
+      db.run(`ALTER TABLE users ADD COLUMN avatar_url TEXT`, (err) => {
+        if (err) {
+          console.warn('Could not add avatar_url column to users table:', err.message);
+        } else {
+          console.log('Migration: added avatar_url column to users table');
         }
       });
     }

@@ -24,3 +24,22 @@ export async function createOrGetUser(username: string) {
   const res = await api.post('/users', { username });
   return res.data.user;
 }
+
+export async function updateProfile(payload: { username?: string; password?: string }) {
+  const res = await api.put('/user', payload);
+  return res.data.user;
+}
+
+export async function uploadAvatar(file: File) {
+  const form = new FormData();
+  form.append('avatar', file);
+  const res = await api.post('/user/avatar', form, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return res.data.user;
+}
+
+export async function removeAvatar() {
+  const res = await api.delete('/user/avatar');
+  return res.data.user;
+}
