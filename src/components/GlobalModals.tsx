@@ -11,6 +11,7 @@ export default function GlobalModals() {
   const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [watchlist, setWatchlist] = useState<any[]>([]);
   const [toastState, setToastState] = useState<{ message: string; type?: 'success' | 'error' | 'info' } | null>(null);
@@ -34,7 +35,9 @@ export default function GlobalModals() {
 
     const onOpenAuth = (e?: any) => {
       const msg = e?.detail?.message || null;
+      const mode = e?.detail?.mode === 'signup' ? 'signup' : 'login';
       setAuthMessage(msg);
+      setAuthMode(mode);
       setIsAuthOpen(true);
     };
 
@@ -72,29 +75,6 @@ export default function GlobalModals() {
       } catch (err) {
         console.warn('GlobalModals: failed to load watchlist after login', err);
       }
-
-      try {
-        const pending = JSON.parse(localStorage.getItem('gowatch_pending_save') || 'null');
-        if (pending) {
-          try {
-            const r = await addToWatchlist({ id: pending.id, title: pending.title, poster: pending.image });
-            const newItem = r && r.item ? r.item : null;
-            if (newItem) {
-              setWatchlist(prev => [newItem, ...(prev || []).filter(i => String(i.movieId) !== String(newItem.movieId))]);
-              try { window.dispatchEvent(new CustomEvent('gowatch:watchlist:added', { detail: newItem })); } catch {}
-            } else {
-              const refreshed = await getWatchlist();
-              setWatchlist(refreshed || []);
-            }
-            try { setToastState({ message: 'Saved pending movie to watchlist', type: 'success' }); } catch {}
-          } catch (err) {
-            console.warn('GlobalModals: pending save failed', err);
-            try { setToastState({ message: 'Failed to save pending movie', type: 'error' }); } catch {}
-          } finally {
-            localStorage.removeItem('gowatch_pending_save');
-          }
-        }
-      } catch {}
     };
 
     const onLogout = () => {
@@ -225,6 +205,7 @@ export default function GlobalModals() {
             setAuthMessage(null);
           }}
           message={authMessage}
+          initialMode={authMode}
         />
       )}
 
