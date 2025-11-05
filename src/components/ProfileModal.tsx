@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { Dialog, DialogContentWide, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -95,7 +95,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
         try { localStorage.setItem('gowatch_user', JSON.stringify(updatedUser)); } catch {}
         try { window.dispatchEvent(new CustomEvent('gowatch:login', { detail: updatedUser })); } catch {}
         try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Profile updated', type: 'success' } })); } catch {}
-        // Clear any temporary avatar preview after successful update
         try { window.dispatchEvent(new CustomEvent('gowatch:avatar:preview', { detail: null })); } catch {}
       }
       onClose();
@@ -110,7 +109,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => { if (!open) onClose(); }}>
-      <DialogContent className="w-[600px] min-w-[700px] max-w-[600px] max-h-[90vh] px-8 py-8 overflow-y-auto">
+  <DialogContentWide className="max-w-none w-[min(92vw,860px)] max-h-[90vh] px-8 py-8 overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl text-center">Edit profile</DialogTitle>
           <DialogDescription className="text-base text-center">
@@ -119,9 +118,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
         </DialogHeader>
 
         <div className="mt-1">
-          <Label className="block text-center text-sm font-medium mb-2">Profile photo</Label>
-
-          {/* Avatar centered */}
           <div className="mb-3 flex justify-center">
             <Avatar className="h-32 w-32 sm:h-36 sm:w-36 border border-black/10 bg-white">
               {avatarPreview ? (
@@ -213,7 +209,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
             {saving ? 'Saving…' : 'Save changes'}
           </Button>
         </div>
-      </DialogContent>
+      </DialogContentWide>
     </Dialog> 
   );
 }
