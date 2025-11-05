@@ -4,7 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Eye, EyeOff, Pencil } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { mediaUrl } from '../lib/api';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl ? mediaUrl(user.avatarUrl) : null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarRemoved, setAvatarRemoved] = useState<boolean>(false);
   const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -105,7 +106,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => { if (!open) onClose(); }}>
-      <DialogContent className="w-[530px] min-w-[530px] max-w-[530px] px-8 py-6 overflow-visible">
+      <DialogContent className="w-[600px] min-w-[700px] max-w-[600px] max-h-[90vh] px-8 py-8 overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl text-center">Edit profile</DialogTitle>
           <DialogDescription className="text-base text-center">
@@ -113,17 +114,22 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-          <div className="mt-1">
+        <div className="mt-1">
           <Label className="block text-center text-sm font-medium mb-2">Profile photo</Label>
-          <div className="relative mx-auto mb-3 h-[160px] w-[160px]">
-            <Avatar className="size-full">
-              <AvatarImage src={avatarPreview || ''} alt={displayName} />
+
+          {/* Avatar centered */}
+          <div className="mb-3 flex justify-center">
+            <Avatar className="h-32 w-32 sm:h-36 sm:w-36 border border-black/10 bg-white">
+              {avatarPreview ? (
+                <AvatarImage src={avatarPreview} alt={displayName} className="object-cover object-center" />
+              ) : null}
               <AvatarFallback className="bg-sky-500/90 text-white text-lg">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
           </div>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
+
           <div className="flex items-center justify-center gap-3">
             <Button type="button" variant="outline" size="sm" onClick={onPickAvatar}>Change photo</Button>
             {avatarPreview && (
@@ -141,7 +147,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
             <Input
               id="profile-username"
               value={username}
-              placeholder="Mona"
               onChange={(e) => setUsername(e.target.value)}
               className="h-10 rounded-lg text-base"
             />
@@ -162,13 +167,8 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
                 type="button"
                 onClick={() => setShowPassword(v => !v)}
                 className="absolute inset-y-0 right-2 my-auto grid h-8 w-8 place-items-center rounded-md hover:bg-muted/60"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
             <p className="text-xs text-muted-foreground">Leave blank to keep your current password.</p>
@@ -184,7 +184,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
               placeholder="********"
               className="h-10 rounded-lg text-base"
             />
-            {!!password && !passwordsMatch && (
+            {!!password && password !== confirmPassword && (
               <p className="text-xs text-red-600">Passwords do not match.</p>
             )}
             {!!password && !passwordValid && (
@@ -197,14 +197,8 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
           <div className="mt-3 text-sm text-red-600">{error}</div>
         )}
 
-        {/* Actions */}
         <div className="flex justify-end mt-6 gap-3">
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="px-4 h-10 rounded-lg"
-            disabled={saving}
-          >
+          <Button onClick={onClose} variant="outline" className="px-4 h-10 rounded-lg" disabled={saving}>
             Cancel
           </Button>
           <Button
@@ -216,6 +210,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
           </Button>
         </div>
       </DialogContent>
-    </Dialog>
+    </Dialog> 
   );
 }
