@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Eye, EyeOff, BadgeCheck } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { mediaUrl } from '../lib/api';
 
 interface ProfileModalProps {
@@ -16,11 +17,11 @@ interface ProfileModalProps {
 export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const rawName = (user?.username || '').trim();
   const [username, setUsername] = useState<string>(rawName || '');
-  // New, non-functional fields to mirror the reference layout (not saved yet)
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [email] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [pwFocused, setPwFocused] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,8 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarRemoved, setAvatarRemoved] = useState<boolean>(false);
   const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [confirmTouched, setConfirmTouched] = useState<boolean>(false);
+  const [confirmComplete, setConfirmComplete] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const displayName = useMemo(() => {
@@ -69,11 +72,11 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const usernameChanged = (username || '').trim() !== (rawName || '');
   const passwordValid = !password || password.length >= 6;
   const passwordsMatch = !password || password === confirmPassword;
+  const showMismatch = !!password && !!confirmPassword && (confirmComplete || (confirmPassword.length === password.length)) && password !== confirmPassword;
   const isDirty = usernameChanged || !!password || !!avatarFile || avatarRemoved;
   const canSave = isDirty && passwordValid && passwordsMatch && !saving;
 
   const handleDelete = () => {
-    // No delete endpoint in server; provide a friendly notice.
     try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Delete account is not available yet.', type: 'info' } })); } catch {}
   };
 
@@ -118,9 +121,9 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => { if (!open) onClose(); }}>
-  <DialogContentWide className="max-w-none w-[min(96vw,900px)] max-h-[90vh] px-8 py-8 overflow-y-auto">
+  <DialogContentWide className="max-w-none w-[min(96vw,1100px)] max-h-[90vh] px-8 py-8 overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">User profile</DialogTitle>
+          <DialogTitle className="text-xl text-center">User profile</DialogTitle>
           <DialogDescription className="text-base">
             Manage your information and your account settings.
           </DialogDescription>
@@ -142,23 +145,17 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
             </div>
           </div>
         </div>
-
-        {/* Fields area */}
         <div className="mt-5 divide-y">
-          <div className="py-5 grid grid-cols-12 gap-4 items-center">
-            <div className="col-span-12 sm:col-span-9 flex items-center gap-3">
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
-              <Button type="button" variant="outline" size="sm" onClick={onPickAvatar}>Change Photo</Button>
-              {avatarPreview && (
-                <Button type="button" variant="ghost" size="sm" onClick={handleRemoveAvatar} className="text-red-600 hover:text-red-700">
-                  Remove
-                </Button>
-              )}
-            </div>
+          <div className="flex items-center gap-3 translate-x-1 sm:translate-x-2">
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
+            <Button type="button" variant="outline" size="sm" onClick={onPickAvatar}>Change Photo</Button>
+            {avatarPreview && (
+              <Button type="button" variant="ghost" size="sm" onClick={handleRemoveAvatar} className="text-red-600 hover:text-red-700">
+                Remove
+              </Button>
+            )}
           </div>
-
-          {/* Username row */}
-          <div className="py-5 grid grid-cols-12 gap-4 items-center">
+          <div className="py-5 grid grid-cols-12 gap-4 items-center mt-4">
             <div className="col-span-12 sm:col-span-3">
               <Label htmlFor="profile-username" className="text-sm font-medium">Username</Label>
             </div>
@@ -179,49 +176,58 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
 
           {/* Password rows */}
           <div className="py-5 grid grid-cols-12 gap-4 items-start">
-            <div className="col-span-12 sm:col-span-3">
-              <Label htmlFor="profile-password" className="text-sm font-medium">New password</Label>
+            <div className="col-span-12 sm:col-span-3 mt-2">
+              <div className="flex items-center gap-2 mt-2">
+                <Label htmlFor="profile-password" className="text-sm font-medium">New password</Label>
+                <span className="text-xs text-muted-foreground">(Leave blank to keep your current password.)</span>
+              </div>
             </div>
             <div className="col-span-12 sm:col-span-9">
-              <div className="relative">
-                <Input
-                  id="profile-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="********"
-                  className="h-10 rounded-lg pr-12 text-base"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute inset-y-0 right-2 my-auto grid h-8 w-8 place-items-center rounded-md hover:bg-muted/60"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">Leave blank to keep your current password.</p>
+              <Tooltip open={pwFocused && !!password && !passwordValid}>
+                <TooltipTrigger asChild>
+                  <div className="relative">
+                    <Input
+                      id="profile-password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onFocus={() => setPwFocused(true)}
+                      onBlur={() => setPwFocused(false)}
+                      placeholder="********"
+                      className="h-10 rounded-lg pr-9 text-base"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 grid place-items-center rounded-md hover:bg-muted/60"
+                    >
+                      {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" sideOffset={6}>
+                  Password must be at least 6 characters.
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
 
           <div className="py-5 grid grid-cols-12 gap-4 items-center">
-            <div className="col-span-12 sm:col-span-3">
-              <Label htmlFor="profile-password-confirm" className="text-sm font-medium">Confirm password</Label>
+            <div className="col-span-12 sm:col-span-3 mt-2">
+              <Label htmlFor="profile-password-confirm" className="text-sm font-medium mt-2">Confirm password</Label>
             </div>
             <div className="col-span-12 sm:col-span-9">
               <Input
                 id="profile-password-confirm"
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => { setConfirmPassword(e.target.value); if (!confirmTouched) setConfirmTouched(true); }}
+                onBlur={() => setConfirmComplete(true)}
                 placeholder="********"
                 className="h-10 rounded-lg text-base"
               />
-              {!!password && password !== confirmPassword && (
+              {showMismatch && (
                 <p className="mt-2 text-xs text-red-600">Passwords do not match.</p>
-              )}
-              {!!password && !passwordValid && (
-                <p className="mt-2 text-xs text-red-600">Password must be at least 6 characters.</p>
               )}
             </div>
           </div>
@@ -233,7 +239,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
 
         <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between mt-6 gap-3">
           <div>
-            <Button type="button" variant="destructive" onClick={handleDelete} className="h-10">Delete user</Button>
+            <Button type="button" variant="destructive" onClick={handleDelete} className="h-10">Delete Account</Button>
           </div>
           <div className="flex justify-end gap-3">
             <Button onClick={onClose} variant="outline" className="px-4 h-10 rounded-lg" disabled={saving}>
