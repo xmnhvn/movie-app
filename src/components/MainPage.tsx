@@ -59,7 +59,6 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   const [watchlist, setWatchlist] = useState<any[]>([]);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
-  const [pendingSave, setPendingSave] = useState<Movie | null>(null);
 
   useEffect(() => {
     // Restore session
@@ -101,10 +100,9 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
       const movie: Movie | undefined = e?.detail;
       if (!movie) return;
       if (!currentUser) {
-        setPendingSave(movie);
-        try { localStorage.setItem('gowatch_pending_save', JSON.stringify(movie)); } catch {}
-        setAuthMessage('Please sign in or create an account to save this movie to your watchlist.');
-        setIsAuthOpen(true);
+        try {
+          window.dispatchEvent(new CustomEvent('gowatch:openAuth', { detail: { message: 'Please Login in or Create an Account to open watchlist.', mode: 'signup' } }));
+        } catch {}
         return;
       }
       try {

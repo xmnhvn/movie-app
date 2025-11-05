@@ -12,15 +12,22 @@ interface AuthModalProps {
   onClose: () => void;
   onLoginSuccess: (user: any) => void;
   message?: string | null;
+  initialMode?: 'login' | 'signup';
 }
 
-export function AuthModal({ isOpen, onClose, onLoginSuccess, message }: AuthModalProps) {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+export function AuthModal({ isOpen, onClose, onLoginSuccess, message, initialMode = 'login' }: AuthModalProps) {
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+    }
+  }, [isOpen, initialMode]);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -54,7 +61,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, message }: AuthModa
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => { if (!open) onClose(); }}>
-    <DialogContent className="w-[430px] min-w-[430px] max-w-[430px] h-[520px] px-8 py-6 overflow-hidden">
+  <DialogContent className="w-[430px] min-w-[430px] max-w-[430px] h-[520px] px-8 py-6 overflow-hidden [&_[data-slot='dialog-close']]:hidden">
         <DialogHeader>
           <DialogTitle className="text-2xl text-center">
             {mode === 'login' ? 'Welcome back' : 'Create your account'}
@@ -119,9 +126,14 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, message }: AuthModa
                     </button>
                   </div>
                 </div>
-                <Button onClick={handleSubmit} disabled={loading} className="w-full h-10 rounded-lg bg-black text-white hover:bg-black/90 mt-4">
-                  {loading ? 'Signing in…' : 'Sign in'}
-                </Button>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <Button onClick={onClose} variant="outline" className="h-10 rounded-lg w-full" disabled={loading}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSubmit} disabled={loading} className="h-10 rounded-lg w-full bg-black text-white hover:bg-black/90">
+                    {loading ? 'Signing in…' : 'Sign in'}
+                  </Button>
+                </div>
               </div>
             </TabsContent>
 
@@ -158,9 +170,14 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, message }: AuthModa
                     </button>
                   </div>
                 </div>
-                <Button onClick={handleSubmit} disabled={loading} className="w-full h-10 rounded-lg bg-black text-white hover:bg-black/90 mt-4">
-                  {loading ? 'Creating…' : 'Create account'}
-                </Button>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <Button onClick={onClose} variant="outline" className="h-10 rounded-lg w-full" disabled={loading}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSubmit} disabled={loading} className="h-10 rounded-lg w-full bg-black text-white hover:bg-black/90">
+                    {loading ? 'Creating…' : 'Create account'}
+                  </Button>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
