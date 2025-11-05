@@ -72,11 +72,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const canSave = isDirty && passwordValid && passwordsMatch && !saving;
 
   const handleDelete = async () => {
-    const ok = window.confirm(
-      'Are you sure you want to permanently delete your account?\nThis will remove your profile, avatar, and all your saved movies/watchlist.\nThis action cannot be undone.'
-    );
-    if (!ok) return;
-
     setSaving(true);
     setError(null);
     try {
@@ -89,10 +84,10 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
       try { window.dispatchEvent(new CustomEvent('gowatch:avatar:preview', { detail: null })); } catch {}
       try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Account deleted', type: 'success' } })); } catch {}
 
-      onClose();
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 150);
+  // Redirect straight to the landing page (no blank screen)
+  try { onClose(); } catch {}
+  window.location.replace('/');
+  return;
     } catch (err: any) {
       const msg = err?.response?.data?.error || err?.message || 'Failed to delete account';
       setError(msg);
@@ -292,7 +287,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
       </DialogContentWide>
 
       <Dialog open={confirmOpen} onOpenChange={(o) => setConfirmOpen(o)}>
-        <DialogContent className="min-w-[150px]max-w-150px]">
+        <DialogContent className="min-w-[150px] max-w-[150px]">
           <div className="flex items-start gap-3">
             <div className="flex-1">
               <DialogHeader>
