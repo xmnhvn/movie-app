@@ -4,8 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Eye, EyeOff, BadgeCheck } from 'lucide-react';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
+import { Eye, EyeOff, BadgeCheck, AlertTriangle } from 'lucide-react';
 import { mediaUrl } from '../lib/api';
 
 interface ProfileModalProps {
@@ -17,11 +16,7 @@ interface ProfileModalProps {
 export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const rawName = (user?.username || '').trim();
   const [username, setUsername] = useState<string>(rawName || '');
-  const [firstName, setFirstName] = useState<string>('');
-  const [lastName, setLastName] = useState<string>('');
-  const [email] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [pwFocused, setPwFocused] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +24,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarRemoved, setAvatarRemoved] = useState<boolean>(false);
   const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [confirmTouched, setConfirmTouched] = useState<boolean>(false);
-  const [confirmComplete, setConfirmComplete] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const displayName = useMemo(() => {
@@ -72,7 +65,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const usernameChanged = (username || '').trim() !== (rawName || '');
   const passwordValid = !password || password.length >= 6;
   const passwordsMatch = !password || password === confirmPassword;
-  const showMismatch = !!password && !!confirmPassword && (confirmComplete || (confirmPassword.length === password.length)) && password !== confirmPassword;
   const isDirty = usernameChanged || !!password || !!avatarFile || avatarRemoved;
   const canSave = isDirty && passwordValid && passwordsMatch && !saving;
 
@@ -121,7 +113,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => { if (!open) onClose(); }}>
-  <DialogContentWide className="max-w-none w-[min(96vw,1100px)] max-h-[90vh] px-8 py-8 overflow-y-auto">
+      <DialogContentWide className="max-w-none w-[min(96vw,1100px)] max-h-[90vh] px-8 py-8 overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl text-center">User profile</DialogTitle>
           <DialogDescription className="text-base">
@@ -135,7 +127,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
               {avatarPreview ? (
                 <AvatarImage src={avatarPreview} alt={displayName} className="object-cover object-center" />
               ) : null}
-              <AvatarFallback className="bg-sky-500/90 text-white">
+              <AvatarFallback className="bg-sky-500/90 text-black">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -145,6 +137,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
             </div>
           </div>
         </div>
+
         <div className="mt-5 divide-y">
           <div className="flex items-center gap-3 translate-x-1 sm:translate-x-2">
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
@@ -155,6 +148,8 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
               </Button>
             )}
           </div>
+
+          {/* Username */}
           <div className="py-5 grid grid-cols-12 gap-4 items-center mt-4">
             <div className="col-span-12 sm:col-span-3">
               <Label htmlFor="profile-username" className="text-sm font-medium">Username</Label>
@@ -174,60 +169,62 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
             </div>
           </div>
 
-          {/* Password rows */}
-          <div className="py-5 grid grid-cols-12 gap-4 items-start">
+          {/* Password Fields */}
+          <div className="py-5 grid grid-cols-12 gap-4 items-start relative">
             <div className="col-span-12 sm:col-span-3 mt-2">
-              <div className="flex items-center gap-2 mt-2">
-                <Label htmlFor="profile-password" className="text-sm font-medium">New password</Label>
-                <span className="text-xs text-muted-foreground">(Leave blank to keep your current password.)</span>
-              </div>
+              <Label htmlFor="profile-password" className="text-sm font-medium">New password</Label>
             </div>
-            <div className="col-span-12 sm:col-span-9">
-              <Tooltip open={pwFocused && !!password && !passwordValid}>
-                <TooltipTrigger asChild>
-                  <div className="relative">
-                    <Input
-                      id="profile-password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onFocus={() => setPwFocused(true)}
-                      onBlur={() => setPwFocused(false)}
-                      placeholder="********"
-                      className="h-10 rounded-lg pr-9 text-base"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(v => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 grid place-items-center rounded-md hover:bg-muted/60"
-                    >
-                      {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                    </button>
+            <div className="col-span-12 sm:col-span-9 relative">
+              <div className="relative">
+                <Input
+                  id="profile-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="********"
+                  className="h-10 rounded-lg pr-9 text-base"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 grid place-items-center rounded-md hover:bg-muted/60"
+                >
+                  {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                </button>
+              </div>
+                {password && password.length < 6 && (
+                  <div className="absolute left-1/2 top-full -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-800 text-sm rounded-lg px-3 py-2 shadow-md animate-fade-in text-center w-max max-w-[260px]">
+                    <div className="flex items-center justify-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      Password must be at least 6 characters.
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-yellow-400"></div>
                   </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" sideOffset={6}>
-                  Password must be at least 6 characters.
-                </TooltipContent>
-              </Tooltip>
+                )}
             </div>
           </div>
 
-          <div className="py-5 grid grid-cols-12 gap-4 items-center">
+          <div className="py-5 grid grid-cols-12 gap-4 items-center relative">
             <div className="col-span-12 sm:col-span-3 mt-2">
-              <Label htmlFor="profile-password-confirm" className="text-sm font-medium mt-2">Confirm password</Label>
+              <Label htmlFor="profile-password-confirm" className="text-sm font-medium">Confirm password</Label>
             </div>
-            <div className="col-span-12 sm:col-span-9">
+            <div className="col-span-12 sm:col-span-9 relative">
               <Input
                 id="profile-password-confirm"
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
-                onChange={(e) => { setConfirmPassword(e.target.value); if (!confirmTouched) setConfirmTouched(true); }}
-                onBlur={() => setConfirmComplete(true)}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="********"
                 className="h-10 rounded-lg text-base"
               />
-              {showMismatch && (
-                <p className="mt-2 text-xs text-red-600">Passwords do not match.</p>
+              {password && password !== confirmPassword && (
+                <div className="absolute left-1/2 top-full -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-800 text-sm rounded-lg px-3 py-2 shadow-md animate-fade-in text-center w-max max-w-[260px]">
+                  <div className="flex items-center justify-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    Passwords do not match.
+                  </div>
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-yellow-400"></div>
+                </div>
               )}
             </div>
           </div>
@@ -255,6 +252,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
           </div>
         </div>
       </DialogContentWide>
-    </Dialog> 
+    </Dialog>
   );
 }
