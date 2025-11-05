@@ -24,6 +24,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarRemoved, setAvatarRemoved] = useState<boolean>(false);
   const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [confirmDirty, setConfirmDirty] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const displayName = useMemo(() => {
@@ -193,12 +194,14 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
                 </button>
               </div>
                 {password && password.length < 6 && (
-                  <div className="absolute left-1/2 top-full -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-800 text-sm rounded-lg px-3 py-2 shadow-md animate-fade-in text-center w-max max-w-[260px]">
-                    <div className="flex items-center justify-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                      Password must be at least 6 characters.
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 animate-fade-in">
+                    <div className="relative rounded-md border border-gray-300 bg-white text-gray-900 text-sm px-3 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.12)] w-max max-w-[280px]">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                        <span>Password must be at least 6 characters.</span>
+                      </div>
+                      <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-3 w-3 rotate-45 bg-white border-t border-l border-gray-300"></div>
                     </div>
-                    <div className="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-yellow-400"></div>
                   </div>
                 )}
             </div>
@@ -213,17 +216,19 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
                 id="profile-password-confirm"
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => { setConfirmPassword(e.target.value); setConfirmDirty(true); }}
                 placeholder="********"
                 className="h-10 rounded-lg text-base"
               />
-              {password && password !== confirmPassword && (
-                <div className="absolute left-1/2 top-full -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-800 text-sm rounded-lg px-3 py-2 shadow-md animate-fade-in text-center w-max max-w-[260px]">
-                  <div className="flex items-center justify-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    Passwords do not match.
+              {password && confirmDirty && !!confirmPassword && password !== confirmPassword && (
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 animate-fade-in">
+                  <div className="relative rounded-md border border-gray-300 bg-white text-gray-900 text-sm px-3 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.12)] w-max max-w-[280px]">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      <span>Passwords do not match.</span>
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-3 w-3 rotate-45 bg-white border-t border-l border-gray-300"></div>
                   </div>
-                  <div className="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-yellow-400"></div>
                 </div>
               )}
             </div>
