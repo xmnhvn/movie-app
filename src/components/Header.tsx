@@ -1,5 +1,5 @@
 import { Search, Menu, User, Heart, Home, Film, LogOut, MoreHorizontal } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 // Resolve logo path via URL to avoid needing .png module declarations
@@ -59,15 +59,30 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
     .slice(0, 2)
     .join('')
     .toUpperCase();
-  // Bust avatar cache when the user updates their photo without needing a page refresh
+  const [tempAvatar, setTempAvatar] = useState<string | null>(null);
+  const [displayedAvatar, setDisplayedAvatar] = useState<string | null>(null);
   const [bust, setBust] = useState<number>(0);
   const avatarSrcBase = headerUser?.avatarUrl ? mediaUrl(headerUser.avatarUrl) : '';
-  const avatarSrc = avatarSrcBase ? `${avatarSrcBase}${avatarSrcBase.includes('?') ? '&' : '?'}v=${bust}` : '';
+  const networkAvatar = avatarSrcBase ? `${avatarSrcBase}${avatarSrcBase.includes('?') ? '&' : '?'}v=${bust}` : '';
 
   useEffect(() => {
-    // When the avatar url changes, bump the cache-buster
     if (headerUser?.avatarUrl) setBust(Date.now());
   }, [headerUser?.avatarUrl]);
+
+  useEffect(() => {
+    if (!networkAvatar) {
+      if (!tempAvatar) setDisplayedAvatar(null);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      setDisplayedAvatar(networkAvatar);
+      setTempAvatar(null);
+    };
+    img.onerror = () => {
+    };
+    img.src = networkAvatar;
+  }, [networkAvatar]);
 
   useEffect(() => {
     const onLogin = () => setBust(Date.now());
@@ -78,6 +93,21 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
       window.removeEventListener('gowatch:login', onLogin as EventListener);
       window.removeEventListener('gowatch:logout', onLogoutEvt as EventListener);
     };
+  }, []);
+
+  useEffect(() => {
+    const onPreview = (e: any) => {
+      const val = e?.detail ?? null;
+      if (typeof val === 'string' && val) {
+        setTempAvatar(val);
+        setDisplayedAvatar(val);
+      } else {
+        setTempAvatar(null);
+        if (!networkAvatar) setDisplayedAvatar(null);
+      }
+    };
+    window.addEventListener('gowatch:avatar:preview', onPreview as EventListener);
+    return () => window.removeEventListener('gowatch:avatar:preview', onPreview as EventListener);
   }, []);
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-gray-800">
@@ -114,9 +144,9 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                     <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button className="h-10 px-3 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2">
-                          <Avatar key={avatarSrc || 'noimg'} className="h-6 w-6">
-                            {avatarSrc ? (
-                              <AvatarImage key={avatarSrc} src={avatarSrc} alt={userName} />
+                          <Avatar key={displayedAvatar || 'noimg'} className="h-6 w-6">
+                            {displayedAvatar ? (
+                              <AvatarImage key={displayedAvatar} src={displayedAvatar} alt={userName} />
                             ) : null}
                             <AvatarFallback className="text-[10px] text-black">{initials || 'U'}</AvatarFallback>
                           </Avatar>
@@ -131,9 +161,9 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                           }}
                         >
                           <div className="flex items-center gap-2">
-                            <Avatar key={avatarSrc || 'noimg'} className="h-6 w-6">
-                              {avatarSrc ? (
-                                <AvatarImage key={avatarSrc} src={avatarSrc} alt={userName} />
+                            <Avatar key={displayedAvatar || 'noimg'} className="h-6 w-6">
+                              {displayedAvatar ? (
+                                <AvatarImage key={displayedAvatar} src={displayedAvatar} alt={userName} />
                               ) : null}
                               <AvatarFallback className="text-[10px] text-black">{initials || 'U'}</AvatarFallback>
                             </Avatar>
