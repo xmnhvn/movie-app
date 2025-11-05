@@ -124,11 +124,11 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
         </DialogHeader>
         <div className="mt-2 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20 border border-black/10 bg-white">
+            <Avatar className="h-16 w-16 min-w-[64px] min-h-[64px] max-w-[64px] max-h-[64px] border border-black/10 bg-white">
               {avatarPreview ? (
                 <AvatarImage src={avatarPreview} alt={displayName} className="object-cover object-center" />
               ) : null}
-              <AvatarFallback className="bg-sky-500/90 text-black">
+              <AvatarFallback className="bg-sky-500/90 text-black text-xl font-semibold">
                 {initials}
               </AvatarFallback>
             </Avatar>
