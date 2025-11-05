@@ -223,6 +223,50 @@ app.delete('/api/user/avatar', authenticateToken, (req, res) => {
   }
 });
 
+// Delete current user and all related data
+app.delete('/api/user', authenticateToken, (req, res) => {
+  try {
+    const userId = req.user && req.user.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Read current avatar to delete after DB cleanup
+    db.get(`SELECT avatar_url FROM users WHERE id = ?`, [userId], (e, row) => {
+      if (e) return res.status(500).json({ error: e.message });
+      const currentAvatar = row && row.avatar_url;
+
+      // Begin a simple transactional sequence
+      db.run('BEGIN', (beginErr) => {
+        if (beginErr) return res.status(500).json({ error: beginErr.message });
+
+        db.run(`DELETE FROM watchlist WHERE user_id = ?`, [userId], function (delWErr) {
+          if (delWErr) {
+            return db.run('ROLLBACK', () => res.status(500).json({ error: delWErr.message }));
+          }
+          db.run(`DELETE FROM users WHERE id = ?`, [userId], function (delUErr) {
+            if (delUErr) {
+              return db.run('ROLLBACK', () => res.status(500).json({ error: delUErr.message }));
+            }
+            db.run('COMMIT', (commitErr) => {
+              if (commitErr) return res.status(500).json({ error: commitErr.message });
+
+              // Best-effort avatar file removal
+              if (currentAvatar && currentAvatar.startsWith('/uploads/')) {
+                const abs = path.join(__dirname, currentAvatar.replace('/uploads/', 'uploads/'));
+                fs.unlink(abs, () => {});
+              }
+
+              // No content on success
+              return res.status(204).end();
+            });
+          });
+        });
+      });
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err?.message || 'internal' });
+  }
+});
+
 app.post('/api/watchlist', authenticateToken, (req, res) => {
   // Use the authenticated user id from the token; ignore any client-supplied userId.
   const userId = req.user && req.user.id;
