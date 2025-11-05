@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Dialog, DialogContentWide, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { Dialog, DialogContentWide, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from './ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
@@ -26,6 +26,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const [avatarRemoved, setAvatarRemoved] = useState<boolean>(false);
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [confirmDirty, setConfirmDirty] = useState<boolean>(false);
+  const [confirmOpen, setConfirmOpen] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const displayName = useMemo(() => {
@@ -70,8 +71,35 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const isDirty = usernameChanged || !!password || !!avatarFile || avatarRemoved;
   const canSave = isDirty && passwordValid && passwordsMatch && !saving;
 
-  const handleDelete = () => {
-    try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Delete account is not available yet.', type: 'info' } })); } catch {}
+  const handleDelete = async () => {
+    const ok = window.confirm(
+      'Are you sure you want to permanently delete your account?\nThis will remove your profile, avatar, and all your saved movies/watchlist.\nThis action cannot be undone.'
+    );
+    if (!ok) return;
+
+    setSaving(true);
+    setError(null);
+    try {
+      const { deleteAccount } = await import('../lib/auth');
+      await deleteAccount();
+
+      try { localStorage.removeItem('gowatch_user'); } catch {}
+      try { localStorage.removeItem('gowatch_token'); } catch {}
+      try { window.dispatchEvent(new CustomEvent('gowatch:logout')); } catch {}
+      try { window.dispatchEvent(new CustomEvent('gowatch:avatar:preview', { detail: null })); } catch {}
+      try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Account deleted', type: 'success' } })); } catch {}
+
+      onClose();
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 150);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || err?.message || 'Failed to delete account';
+      setError(msg);
+      try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: msg, type: 'error' } })); } catch {}
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSave = async () => {
@@ -150,7 +178,7 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
                   Remove photo
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="justify-center" variant="destructive" onClick={handleDelete}>
+                <DropdownMenuItem className="justify-center" variant="destructive" onClick={() => setConfirmOpen(true)}>
                   Delete account
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -262,6 +290,41 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
           </div>
         </div>
       </DialogContentWide>
+
+      <Dialog open={confirmOpen} onOpenChange={(o) => setConfirmOpen(o)}>
+        <DialogContent className="min-w-[150px]max-w-150px]">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <DialogHeader>
+                <DialogTitle className="text-xl">Delete account</DialogTitle>
+                <DialogDescription>
+                  This will permanently remove your account, profile details, avatar, and your entire watchlist. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmOpen(false)}
+              disabled={saving}
+              className="h-10 rounded-lg"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={async () => { setConfirmOpen(false); await handleDelete(); }}
+              disabled={saving}
+              className="h-10 rounded-lg"
+            >
+              {saving ? 'Deleting…' : 'Delete permanently'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

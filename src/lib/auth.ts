@@ -43,3 +43,7 @@ export async function removeAvatar() {
   const res = await api.delete('/user/avatar');
   return res.data.user;
 }
+
+export async function deleteAccount(): Promise<void> {
+  await api.delete('/user');
+}
