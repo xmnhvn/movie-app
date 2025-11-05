@@ -2,9 +2,10 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Dialog, DialogContentWide, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Eye, EyeOff, BadgeCheck, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, BadgeCheck, AlertTriangle, Trash2, MoreVertical } from 'lucide-react';
 import { mediaUrl } from '../lib/api';
 
 interface ProfileModalProps {
@@ -121,10 +122,9 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
             Manage your information and your account settings.
           </DialogDescription>
         </DialogHeader>
-
         <div className="mt-2 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16 border border-black/10 bg-white">
+            <Avatar className="h-20 w-20 border border-black/10 bg-white">
               {avatarPreview ? (
                 <AvatarImage src={avatarPreview} alt={displayName} className="object-cover object-center" />
               ) : null}
@@ -137,21 +137,30 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
               <div className="text-sm text-muted-foreground">{rawName ? `${rawName}@gowatch.app` : 'No email on file'}</div>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="ghost" size="icon" title="More actions" className="h-8 w-8 rounded-full">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 text-center">
+                <DropdownMenuItem className="justify-center" onClick={onPickAvatar}>{avatarPreview ? 'Change photo' : 'Add photo'}</DropdownMenuItem>
+                <DropdownMenuItem className="justify-center" variant="destructive" onClick={handleRemoveAvatar} disabled={!avatarPreview}>
+                  Remove photo
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="justify-center" variant="destructive" onClick={handleDelete}>
+                  Delete account
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
+          </div>
         </div>
 
         <div className="mt-5 divide-y">
-          <div className="flex items-center gap-3 translate-x-1 sm:translate-x-2">
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
-            <Button type="button" variant="outline" size="sm" onClick={onPickAvatar}>Change Photo</Button>
-            {avatarPreview && (
-              <Button type="button" variant="ghost" size="sm" onClick={handleRemoveAvatar} className="text-red-600 hover:text-red-700">
-                Remove
-              </Button>
-            )}
-          </div>
-
-          {/* Username */}
-          <div className="py-5 grid grid-cols-12 gap-4 items-center mt-4">
+          <div className="py-5 grid grid-cols-12 gap-4 items-center mt-0">
             <div className="col-span-12 sm:col-span-3">
               <Label htmlFor="profile-username" className="text-sm font-medium">Username</Label>
             </div>
@@ -170,7 +179,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
             </div>
           </div>
 
-          {/* Password Fields */}
           <div className="py-5 grid grid-cols-12 gap-4 items-start relative">
             <div className="col-span-12 sm:col-span-3 mt-2">
               <Label htmlFor="profile-password" className="text-sm font-medium">New password</Label>
@@ -193,17 +201,17 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
                   {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>
               </div>
-                {password && password.length < 6 && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 animate-fade-in">
-                    <div className="relative rounded-md border border-gray-300 bg-white text-gray-900 text-sm px-3 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.12)] w-max max-w-[280px]">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                        <span>Password must be at least 6 characters.</span>
-                      </div>
-                      <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-3 w-3 rotate-45 bg-white border-t border-l border-gray-300"></div>
+              {password && password.length < 6 && (
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 animate-fade-in">
+                  <div className="relative rounded-md border border-gray-300 bg-white text-gray-900 text-sm px-3 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.12)] w-max max-w-[280px]">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      <span>Password must be at least 6 characters.</span>
                     </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-3 w-3 rotate-45 bg-white border-t border-l border-gray-300"></div>
                   </div>
-                )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -239,11 +247,8 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
           <div className="mt-3 text-sm text-red-600">{error}</div>
         )}
 
-        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between mt-6 gap-3">
-          <div>
-            <Button type="button" variant="destructive" onClick={handleDelete} className="h-10">Delete Account</Button>
-          </div>
-          <div className="flex justify-end gap-3">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end mt-3 gap-3">
+          <div className="flex gap-3">
             <Button onClick={onClose} variant="outline" className="px-4 h-10 rounded-lg" disabled={saving}>
               Cancel
             </Button>
