@@ -141,6 +141,23 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                 <div className="flex items-center ml-4 space-x-4">
                 {currentUser ? (
                   <div className="flex items-center gap-2">
+                    {/* Watchlist button placed to the left of the user menu */}
+                    <Button
+                      onClick={() => onOpenWatchlist && onOpenWatchlist()}
+                      className="h-10 px-4 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2"
+                      aria-label="Open watchlist"
+                    >
+                      <Heart className="w-5 h-5" />
+                      <span className="text-sm font-semibold">Watchlist</span>
+                      {typeof watchlistCount === 'number' && watchlistCount > 0 && (
+                        <span
+                          className="ml-1 pointer-events-none select-none h-5 min-w-[1.25rem] px-1 inline-flex items-center justify-center rounded-full bg-red-500 text-purple-100 text-[10px] font-bold"
+                          aria-label={`Watchlist items: ${watchlistCount}`}
+                        >
+                          {watchlistCount > 99 ? '99+' : watchlistCount}
+                        </span>
+                      )}
+                    </Button>
                     <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button className="h-10 px-6 py-4 bg-gray-700 text-white rounded-xl flex items-center gap-2">
@@ -172,19 +189,6 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                           <MoreHorizontal className="w-4 h-4 text-gray-400" />
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onOpenWatchlist && onOpenWatchlist()} className="flex items-center gap-2">
-                          <Heart className="w-4 h-4" />
-                          <span>Watchlist</span>
-                          {typeof watchlistCount === 'number' && watchlistCount > 0 && (
-                            <span
-                              className="ml-auto pointer-events-none select-none h-5 min-w-[1.25rem] px-1 inline-flex items-center justify-center rounded-full bg-red-500 text-purple-100 text-[10px] font-bold"
-                              aria-label={`Watchlist items: ${watchlistCount}`}
-                            >
-                              {watchlistCount > 99 ? '99+' : watchlistCount}
-                            </span>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onLogout && onLogout()} className="text-red-600">
                           <LogOut className="w-4 h-4" />
                           Sign Out
@@ -193,10 +197,20 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                     </DropdownMenu>
                   </div>
                 ) : (
-                  <Button onClick={() => onOpenAuth && onOpenAuth()} className="h-10 px-4 py-2 bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white shadow-lg hover:from-purple-800 hover:via-purple-700 transition-colors rounded-xl flex items-center gap-3">
-                    <User className="w-5 h-5 text-white" />
-                    <span className="text-sm font-semibold">Sign in</span>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => onOpenWatchlist && onOpenWatchlist()}
+                      className="h-10 px-4 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2"
+                      aria-label="Open watchlist"
+                    >
+                      <Heart className="w-5 h-5" />
+                      <span className="text-sm font-semibold">Watchlist</span>
+                    </Button>
+                    <Button onClick={() => onOpenAuth && onOpenAuth()} className="h-10 px-4 py-2 bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white shadow-lg hover:from-purple-800 hover:via-purple-700 transition-colors rounded-xl flex items-center gap-3">
+                      <User className="w-5 h-5 text-white" />
+                      <span className="text-sm font-semibold">Sign in</span>
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
