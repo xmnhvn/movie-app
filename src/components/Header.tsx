@@ -1,4 +1,4 @@
-import { Search, Menu, User, Heart, Home, Film, LogOut, MoreHorizontal } from 'lucide-react';
+import { Search, Menu, User, Heart, Home, Film, LogOut, MoreHorizontal, MoreVertical } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -170,9 +170,13 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                           <span className="text-base font-semibold">{displayName}</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="center" className="w-[280px]">
+                      <DropdownMenuContent
+                        align="center"
+                        className="max-w-[90vw] text-center"
+                        style={{ width: 180, minWidth: 180 }}
+                      >
                         <DropdownMenuItem
-                          className="flex items-center justify-between px-2 py-2 cursor-pointer"
+                          className="flex items-center justify-center px-2 py-2 cursor-pointer"
                           onSelect={(_e: any) => {
                             try { window.dispatchEvent(new CustomEvent('gowatch:openProfile')); } catch {}
                           }}
@@ -185,11 +189,11 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                               <AvatarFallback className="text-[12px] text-black">{initials || 'U'}</AvatarFallback>
                             </Avatar>
                             <span className="text-base font-medium">{displayName}</span>
+                            <MoreVertical className="w-4 h-4 text-gray-400" />
                           </div>
-                          <MoreHorizontal className="w-4 h-4 text-gray-400" />
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onLogout && onLogout()} className="text-red-600">
+                        <DropdownMenuItem onClick={() => onLogout && onLogout()} className="text-red-600 justify-center">
                           <LogOut className="w-4 h-4" />
                           Sign Out
                         </DropdownMenuItem>
