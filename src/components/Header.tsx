@@ -143,14 +143,14 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                   <div className="flex items-center gap-2">
                     <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
-                        <Button className="h-10 px-3 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2">
-                          <Avatar key={displayedAvatar || 'noimg'} className="h-6 w-6">
+                        <Button className="h-10 px-6 py-4 bg-gray-700 text-white rounded-xl flex items-center gap-2">
+                          <Avatar key={displayedAvatar || 'noimg'} className="h-8 w-8">
                             {displayedAvatar ? (
                               <AvatarImage key={displayedAvatar} src={displayedAvatar} alt={userName} />
                             ) : null}
-                            <AvatarFallback className="text-[10px] text-black">{initials || 'U'}</AvatarFallback>
+                            <AvatarFallback className="text-[12px] text-black">{initials || 'U'}</AvatarFallback>
                           </Avatar>
-                          <span className="text-sm font-semibold">{displayName}</span>
+                          <span className="text-base font-semibold">{displayName}</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="center" className="w-[280px]">
@@ -161,13 +161,13 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                           }}
                         >
                           <div className="flex items-center gap-2">
-                            <Avatar key={displayedAvatar || 'noimg'} className="h-6 w-6">
+                            <Avatar key={displayedAvatar || 'noimg'} className="h-8 w-8">
                               {displayedAvatar ? (
                                 <AvatarImage key={displayedAvatar} src={displayedAvatar} alt={userName} />
                               ) : null}
-                              <AvatarFallback className="text-[10px] text-black">{initials || 'U'}</AvatarFallback>
+                              <AvatarFallback className="text-[12px] text-black">{initials || 'U'}</AvatarFallback>
                             </Avatar>
-                            <span className="text-sm font-medium">{displayName}</span>
+                            <span className="text-base font-medium">{displayName}</span>
                           </div>
                           <MoreHorizontal className="w-4 h-4 text-gray-400" />
                         </DropdownMenuItem>
