@@ -51,12 +51,14 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
     setAvatarFile(file);
     const url = URL.createObjectURL(file);
     setAvatarPreview(url);
+    try { window.dispatchEvent(new CustomEvent('gowatch:avatar:preview', { detail: url })); } catch {}
     setAvatarRemoved(false);
   };
 
   const handleRemoveAvatar = () => {
     setAvatarPreview(null);
     setAvatarFile(null);
+    try { window.dispatchEvent(new CustomEvent('gowatch:avatar:preview', { detail: null })); } catch {}
     setAvatarRemoved(true);
   };
 
@@ -93,6 +95,8 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
         try { localStorage.setItem('gowatch_user', JSON.stringify(updatedUser)); } catch {}
         try { window.dispatchEvent(new CustomEvent('gowatch:login', { detail: updatedUser })); } catch {}
         try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Profile updated', type: 'success' } })); } catch {}
+        // Clear any temporary avatar preview after successful update
+        try { window.dispatchEvent(new CustomEvent('gowatch:avatar:preview', { detail: null })); } catch {}
       }
       onClose();
     } catch (err: any) {
