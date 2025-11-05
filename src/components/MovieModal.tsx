@@ -1,4 +1,4 @@
-import { X, Star, Play, Plus, Calendar, Clock } from 'lucide-react';
+import { X, Star, Play, Heart, Calendar, Clock } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
@@ -19,19 +19,15 @@ interface MovieModalProps {
   movie: Movie | null;
   isOpen: boolean;
   onClose: () => void;
-  // indicates whether this movie is already in the user's watchlist
   isSaved?: boolean;
 }
 
 export function MovieModal({ movie, isOpen, onClose, isSaved = false }: MovieModalProps) {
   const [saved, setSaved] = React.useState<boolean>(!!isSaved);
-
-  // keep local state in sync with prop when movie changes or upstream updates
   React.useEffect(() => {
     setSaved(!!isSaved);
-  }, [isSaved, movie?.id]);
+  }, [isSaved, movie?.id])
 
-  // listen for global watchlist updates to reflect immediately without page refresh
   React.useEffect(() => {
     if (!movie) return;
     const onAdded = (e: any) => {
@@ -112,7 +108,13 @@ export function MovieModal({ movie, isOpen, onClose, isSaved = false }: MovieMod
               <div className="p-6">
                 <div className="flex flex-wrap gap-3 mb-6">
                   <div className="flex items-center gap-3">
-                    <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
+                    <Button
+                      size="lg"
+                      className="bg-purple-600 text-white opacity-60 cursor-not-allowed"
+                      disabled
+                      aria-disabled="true"
+                      title="Coming soon"
+                    >
                       <Play className="w-5 h-5 mr-2" />
                       Watch Now
                     </Button>
@@ -124,15 +126,14 @@ export function MovieModal({ movie, isOpen, onClose, isSaved = false }: MovieMod
                         if (saved) return;
                         try {
                           window.dispatchEvent(new CustomEvent('gowatch:saveMovie', { detail: movie }));
-                          // optimistically mark as saved; will be corrected by events if the API fails
                           setSaved(true);
                         } catch (err) {
                         }
                       }}
                       disabled={saved}
                     >
-                      <Star className="w-5 h-5" />
-                      {saved ? 'Saved' : 'Save'}
+                      <Heart className={"w-5 h-5 " + (saved ? 'fill-red-500 text-red-500' : '')} />
+                      {saved ? 'Added' : 'Add to Watchlist'}
                     </Button>
                   </div>
                 </div>
