@@ -1,8 +1,11 @@
 import { Search, Menu, User, Heart, Home, Film, LogOut, MoreHorizontal } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import GoWatchLogo from './GoWatch-logo.png';
+// Resolve logo path via URL to avoid needing .png module declarations
+const GoWatchLogo = new URL('./GoWatch-logo.png', import.meta.url).href;
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { mediaUrl } from '../lib/api';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +26,31 @@ interface HeaderProps {
 }
 
 export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOpenAuth, watchlistCount, currentUser, onLogout }: HeaderProps) {
-  const userName = (currentUser?.username || '').trim();
+  // Maintain a local copy of the user that can update immediately from global events
+  const [headerUser, setHeaderUser] = useState<any>(currentUser || null);
+
+  // Keep local user in sync with prop
+  useEffect(() => {
+    setHeaderUser(currentUser || null);
+  }, [currentUser]);
+
+  // Also react immediately to profile updates broadcasted globally
+  useEffect(() => {
+    const onLogin = (e: any) => {
+      const u = e?.detail || null;
+      if (u) setHeaderUser(u);
+      else {
+        try {
+          const raw = localStorage.getItem('gowatch_user');
+          if (raw) setHeaderUser(JSON.parse(raw));
+        } catch {}
+      }
+    };
+    window.addEventListener('gowatch:login', onLogin as EventListener);
+    return () => window.removeEventListener('gowatch:login', onLogin as EventListener);
+  }, []);
+
+  const userName = (headerUser?.username || '').trim();
   const displayName = userName ? userName.charAt(0).toUpperCase() + userName.slice(1) : '';
   const initials = userName
     .split(' ')
@@ -32,6 +59,26 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
     .slice(0, 2)
     .join('')
     .toUpperCase();
+  // Bust avatar cache when the user updates their photo without needing a page refresh
+  const [bust, setBust] = useState<number>(0);
+  const avatarSrcBase = headerUser?.avatarUrl ? mediaUrl(headerUser.avatarUrl) : '';
+  const avatarSrc = avatarSrcBase ? `${avatarSrcBase}${avatarSrcBase.includes('?') ? '&' : '?'}v=${bust}` : '';
+
+  useEffect(() => {
+    // When the avatar url changes, bump the cache-buster
+    if (headerUser?.avatarUrl) setBust(Date.now());
+  }, [headerUser?.avatarUrl]);
+
+  useEffect(() => {
+    const onLogin = () => setBust(Date.now());
+    const onLogoutEvt = () => setBust(0);
+    window.addEventListener('gowatch:login', onLogin as EventListener);
+    window.addEventListener('gowatch:logout', onLogoutEvt as EventListener);
+    return () => {
+      window.removeEventListener('gowatch:login', onLogin as EventListener);
+      window.removeEventListener('gowatch:logout', onLogoutEvt as EventListener);
+    };
+  }, []);
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-gray-800">
       <div className="relative z-10 px-4 py-6 lg:px-8">
@@ -67,8 +114,10 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                     <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button className="h-10 px-3 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={currentUser?.avatarUrl || ''} alt={userName} />
+                          <Avatar key={avatarSrc || 'noimg'} className="h-6 w-6">
+                            {avatarSrc ? (
+                              <AvatarImage key={avatarSrc} src={avatarSrc} alt={userName} />
+                            ) : null}
                             <AvatarFallback className="text-[10px] text-black">{initials || 'U'}</AvatarFallback>
                           </Avatar>
                           <span className="text-sm font-semibold">{displayName}</span>
@@ -82,8 +131,10 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                           }}
                         >
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={currentUser?.avatarUrl || ''} alt={userName} />
+                            <Avatar key={avatarSrc || 'noimg'} className="h-6 w-6">
+                              {avatarSrc ? (
+                                <AvatarImage key={avatarSrc} src={avatarSrc} alt={userName} />
+                              ) : null}
                               <AvatarFallback className="text-[10px] text-black">{initials || 'U'}</AvatarFallback>
                             </Avatar>
                             <span className="text-sm font-medium">{displayName}</span>
