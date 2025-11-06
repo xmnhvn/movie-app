@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Alert, AlertDescription } from './ui/alert';
-import { Eye, EyeOff, Info } from 'lucide-react';
+import { Eye, EyeOff, Info, AlertTriangle } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -35,6 +35,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, message, initialMod
     try {
       if (!username || !password) {
         throw new Error('Please enter username and password');
+      }
+      if (mode === 'signup' && password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
       }
       if (mode === 'login') {
         const { login } = await import('../lib/auth');
@@ -169,12 +172,25 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, message, initialMod
                       {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                     </button>
                   </div>
+                  {password && password.length < 6 && (
+                    <div className="relative">
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 animate-fade-in">
+                        <div className="relative rounded-md border border-gray-300 bg-white text-gray-900 text-sm px-3 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.12)] w-max max-w-[280px]">
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                            <span>Password must be at least 6 characters.</span>
+                          </div>
+                          <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-3 w-3 rotate-45 bg-white border-t border-l border-gray-300"></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <Button onClick={onClose} variant="outline" className="h-10 rounded-lg w-full" disabled={loading}>
                     Cancel
                   </Button>
-                  <Button onClick={handleSubmit} disabled={loading} className="h-10 rounded-lg w-full bg-black text-white hover:bg-black/90">
+                  <Button onClick={handleSubmit} disabled={loading || password.length < 6} className="h-10 rounded-lg w-full bg-black text-white hover:bg-black/90">
                     {loading ? 'Creating…' : 'Create account'}
                   </Button>
                 </div>
