@@ -54,6 +54,9 @@ app.post('/api/auth/signup', (req, res) => {
     console.log('POST /api/auth/signup body:', req.body);
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
+    if (typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ error: 'password must be at least 6 characters' });
+    }
 
     const hashed = bcrypt.hashSync(password, 8);
     const insert = `INSERT INTO users (username, password) VALUES (?, ?)`;
@@ -146,6 +149,9 @@ app.put('/api/user', authenticateToken, (req, res) => {
     const userId = req.user && req.user.id;
     const { username, password } = req.body || {};
     if (!username && !password) return res.status(400).json({ error: 'no fields to update' });
+    if (password && (typeof password !== 'string' || password.length < 6)) {
+      return res.status(400).json({ error: 'password must be at least 6 characters' });
+    }
 
     const doUpdate = () => {
       const fields = [];
