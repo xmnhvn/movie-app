@@ -2,8 +2,7 @@ import { Search, Menu, User, Heart, Home, Film, LogOut, MoreHorizontal, MoreVert
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-// Resolve logo path via URL to avoid needing .png module declarations
-const GoWatchLogo = new URL('./GoWatch-logo.png', import.meta.url).href;
+
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { mediaUrl } from '../lib/api';
 import {
@@ -117,9 +116,9 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
             <div className="flex items-center w-full justify-between gap-8">
               <div className="flex items-center gap-8">
                 <img 
-                  src={GoWatchLogo} 
-                  alt="GoWatch Logo" 
-                  className="h-8 w-auto drop-shadow-lg" 
+                  src="/GoWatch-logo-DMSkB9OK.png"
+                  alt="GoWatch Logo"
+                  className="h-8 w-auto drop-shadow-lg"
                   style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }}
                 />
               </div>

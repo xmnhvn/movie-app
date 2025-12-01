@@ -1,8 +1,8 @@
 
   import { createRoot } from "react-dom/client";
-  import App from "./App.tsx";
+  import App from "./App";
   import "./index.css";
-  const goWatchIcon = new URL("./components/GoWatch_Icon.png", import.meta.url).href;
+  const goWatchIcon = "/GoWatch_Icon-Xxhj5pLQ.png";
 
   function ensureFavicon(href: string) {
     if (!href) return;
