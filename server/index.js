@@ -14,11 +14,6 @@ const JWT_SECRET = process.env.GOWATCH_JWT_SECRET || 'change-me-in-prod';
 
 app.use(cors());
 app.use(bodyParser.json());
-// Serve user-uploaded content
-const uploadsRoot = path.join(__dirname, 'uploads');
-const avatarDir = path.join(uploadsRoot, 'avatars');
-try { fs.mkdirSync(avatarDir, { recursive: true }); } catch {}
-app.use('/uploads', express.static(uploadsRoot));
 
 app.use((req, res, next) => {
   try {
@@ -129,18 +124,8 @@ function authenticateToken(req, res, next) {
   }
 }
 
-// Configure multer for avatar uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, avatarDir);
-  },
-  filename: function (req, file, cb) {
-    const userId = (req.user && req.user.id) || 'anon';
-    const ext = (path.extname(file.originalname) || '').toLowerCase();
-    const safeExt = ['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(ext) ? ext : '.png';
-    cb(null, `${userId}-${Date.now()}${safeExt}`);
-  }
-});
+// Configure multer for avatar uploads (in memory)
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Update user credentials (username, password)
@@ -165,9 +150,12 @@ app.put('/api/user', authenticateToken, (req, res) => {
           if (err.message && err.message.includes('UNIQUE')) return res.status(409).json({ error: 'username exists' });
           return res.status(500).json({ error: err.message });
         }
-        db.get(`SELECT id, username, avatar_url as avatarUrl, created_at FROM users WHERE id = ?`, [userId], (e2, row) => {
+        db.get(`SELECT id, username, avatar_data, avatar_mime, created_at FROM users WHERE id = ?`, [userId], (e2, row) => {
           if (e2) return res.status(500).json({ error: e2.message });
-          return res.json({ user: row });
+          const user = { ...row, avatarUrl: row.avatar_data ? `/api/user/avatar` : null };
+          delete user.avatar_data;
+          delete user.avatar_mime;
+          return res.json({ user });
         });
       });
     };
@@ -186,17 +174,36 @@ app.put('/api/user', authenticateToken, (req, res) => {
   }
 });
 
+// Get user avatar
+app.get('/api/user/avatar', authenticateToken, (req, res) => {
+  try {
+    const userId = req.user && req.user.id;
+    db.get(`SELECT avatar_data, avatar_mime FROM users WHERE id = ?`, [userId], (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!row || !row.avatar_data) return res.status(404).json({ error: 'no avatar' });
+      res.set('Content-Type', row.avatar_mime);
+      res.send(row.avatar_data);
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err?.message || 'internal' });
+  }
+});
+
 // Upload or replace avatar
 app.post('/api/user/avatar', authenticateToken, upload.single('avatar'), (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'avatar file required' });
     const userId = req.user && req.user.id;
-    const publicPath = `/uploads/avatars/${req.file.filename}`;
-    db.run(`UPDATE users SET avatar_url = ? WHERE id = ?`, [publicPath, userId], function (err) {
+    const buffer = req.file.buffer;
+    const mime = req.file.mimetype;
+    db.run(`UPDATE users SET avatar_data = ?, avatar_mime = ? WHERE id = ?`, [buffer, mime, userId], function (err) {
       if (err) return res.status(500).json({ error: err.message });
-      db.get(`SELECT id, username, avatar_url as avatarUrl, created_at FROM users WHERE id = ?`, [userId], (e2, row) => {
+      db.get(`SELECT id, username, avatar_data, avatar_mime, created_at FROM users WHERE id = ?`, [userId], (e2, row) => {
         if (e2) return res.status(500).json({ error: e2.message });
-        return res.json({ user: row });
+        const user = { ...row, avatarUrl: row.avatar_data ? `/api/user/avatar` : null };
+        delete user.avatar_data;
+        delete user.avatar_mime;
+        return res.json({ user });
       });
     });
   } catch (err) {
@@ -208,20 +215,14 @@ app.post('/api/user/avatar', authenticateToken, upload.single('avatar'), (req, r
 app.delete('/api/user/avatar', authenticateToken, (req, res) => {
   try {
     const userId = req.user && req.user.id;
-    db.get(`SELECT avatar_url FROM users WHERE id = ?`, [userId], (e, row) => {
-      if (e) return res.status(500).json({ error: e.message });
-      const current = row && row.avatar_url;
-      db.run(`UPDATE users SET avatar_url = NULL WHERE id = ?`, [userId], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        // try deleting old file (best-effort)
-        if (current && current.startsWith('/uploads/')) {
-          const abs = path.join(__dirname, current.replace('/uploads/', 'uploads/'));
-          fs.unlink(abs, () => {});
-        }
-        db.get(`SELECT id, username, avatar_url as avatarUrl, created_at FROM users WHERE id = ?`, [userId], (e2, user) => {
-          if (e2) return res.status(500).json({ error: e2.message });
-          return res.json({ user });
-        });
+    db.run(`UPDATE users SET avatar_data = NULL, avatar_mime = NULL WHERE id = ?`, [userId], function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      db.get(`SELECT id, username, avatar_data, avatar_mime, created_at FROM users WHERE id = ?`, [userId], (e2, user) => {
+        if (e2) return res.status(500).json({ error: e2.message });
+        const responseUser = { ...user, avatarUrl: user.avatar_data ? `/api/user/avatar` : null };
+        delete responseUser.avatar_data;
+        delete responseUser.avatar_mime;
+        return res.json({ user: responseUser });
       });
     });
   } catch (err) {
@@ -235,12 +236,8 @@ app.delete('/api/user', authenticateToken, (req, res) => {
     const userId = req.user && req.user.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    // Read current avatar to delete after DB cleanup
-    db.get(`SELECT avatar_url FROM users WHERE id = ?`, [userId], (e, row) => {
-      if (e) return res.status(500).json({ error: e.message });
-      const currentAvatar = row && row.avatar_url;
+    // Begin a simple transactional sequence
 
-      // Begin a simple transactional sequence
       db.run('BEGIN', (beginErr) => {
         if (beginErr) return res.status(500).json({ error: beginErr.message });
 
@@ -255,25 +252,16 @@ app.delete('/api/user', authenticateToken, (req, res) => {
             db.run('COMMIT', (commitErr) => {
               if (commitErr) return res.status(500).json({ error: commitErr.message });
 
-              // Best-effort avatar file removal
-              if (currentAvatar && currentAvatar.startsWith('/uploads/')) {
-                const abs = path.join(__dirname, currentAvatar.replace('/uploads/', 'uploads/'));
-                fs.unlink(abs, () => {});
-              }
-
               // No content on success
               return res.status(204).end();
             });
-          });
         });
       });
     });
   } catch (err) {
     return res.status(500).json({ error: err?.message || 'internal' });
   }
-});
-
-app.post('/api/watchlist', authenticateToken, (req, res) => {
+});app.post('/api/watchlist', authenticateToken, (req, res) => {
   // Use the authenticated user id from the token; ignore any client-supplied userId.
   const userId = req.user && req.user.id;
   const { movie } = req.body;
