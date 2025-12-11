@@ -4,7 +4,6 @@ import { Footer } from './Footer';
 import { motion } from 'motion/react';
 import React, { useState } from 'react';
 
-
 interface LandingPageProps {
   onEnter: (query: string) => void;
 }
@@ -29,7 +28,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       <div className="flex flex-col items-center py-8">
         <div className="mb-4">
           <img
-            src={logo}
+            src="/GoWatch-logo.png?v=2"
             alt="GoWatch Logo"
             className="h-16 w-auto mx-auto drop-shadow-lg"
             style={{ filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))' }}
@@ -85,7 +84,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         </p>
         <h3 className="text-lg font-semibold text-gray-700 mb-2">Our Platform Includes:</h3>
         <ul className="list-none mb-6 pl-0">
-          <li className="flex items-start mb-1"><span className="text-purple-500 mr-2 mt-1">✓</span><span>No account required – stream movies instantly without registration.</span></li>
           <li className="flex items-start mb-1"><span className="text-purple-500 mr-2 mt-1">✓</span><span>Wide range of genres – from timeless classics to the latest blockbusters.</span></li>
           <li className="flex items-start mb-1"><span className="text-purple-500 mr-2 mt-1">✓</span><span>Smart recommendations – discover new titles based on what you love to watch.</span></li>
           <li className="flex items-start mb-1"><span className="text-purple-500 mr-2 mt-1">✓</span><span>Mobile-friendly experience – stream movies on any device, anytime.</span></li>
@@ -105,7 +103,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         </p>
         <br />
         <p className="text-base text-gray-600 text-justify">
-          With GoWatch, movie lovers everywhere can find a convenient, safe, and enjoyable way to watch their favorite films—free, simple, and no account required.
+          With GoWatch, movie lovers everywhere can find a convenient, safe, and enjoyable way to watch their favorite films—free, and simple.
         </p>
         <br />
         <br />

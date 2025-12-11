@@ -116,7 +116,7 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
             <div className="flex items-center w-full justify-between gap-8">
               <div className="flex items-center gap-8">
                 <img
-                  src="/assets/GoWatch-logo-DMSkB9OK.png"
+                  src="/GoWatch-logo.png?v=2"
                   alt="GoWatch Logo"
                   className="h-8 w-auto drop-shadow-lg"
                   style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }}
