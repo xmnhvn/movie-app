@@ -2,7 +2,7 @@
   import { createRoot } from "react-dom/client";
   import App from "./App";
   import "./index.css";
-  const goWatchIcon = "/GoWatch_Icon-Xxhj5pLQ.png";
+  const goWatchIcon = "/assets/GoWatch_Icon-Xxhj5pLQ.png";
 
   function ensureFavicon(href: string) {
     if (!href) return;

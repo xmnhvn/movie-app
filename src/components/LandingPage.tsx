@@ -28,10 +28,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
     <br />
       <div className="flex flex-col items-center py-8">
         <div className="mb-4">
-          <img 
-            src="/GoWatch-logo-DMSkB9OK.png" 
-            alt="GoWatch Logo" 
-            className="h-16 w-auto mx-auto drop-shadow-lg" 
+          <img
+            src={logo}
+            alt="GoWatch Logo"
+            className="h-16 w-auto mx-auto drop-shadow-lg"
             style={{ filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))' }}
           />
         </div>
