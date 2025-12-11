@@ -68,7 +68,7 @@ app.post('/api/auth/signup', (req, res) => {
         }
 
         const token = jwt.sign({ id: row.id, username: row.username }, JWT_SECRET, { expiresIn: '30d' });
-        res.json({ user: row, token });
+        res.json({ user: { ...row, avatarUrl: null }, token });
       });
     });
   } catch (err) {
@@ -96,7 +96,8 @@ app.post('/api/auth/login', (req, res) => {
       if (!ok) return res.status(401).json({ error: 'invalid credentials' });
 
       const token = jwt.sign({ id: row.id, username: row.username }, JWT_SECRET, { expiresIn: '30d' });
-      res.json({ user: { id: row.id, username: row.username }, token });
+      const avatarUrl = row.avatar_data ? `/api/user/avatar/${row.id}` : null;
+      res.json({ user: { id: row.id, username: row.username, avatarUrl }, token });
     });
   } catch (err) {
     console.error('POST /api/auth/login uncaught error:', err);
@@ -152,7 +153,7 @@ app.put('/api/user', authenticateToken, (req, res) => {
         }
         db.get(`SELECT id, username, avatar_data, avatar_mime, created_at FROM users WHERE id = ?`, [userId], (e2, row) => {
           if (e2) return res.status(500).json({ error: e2.message });
-          const user = { ...row, avatarUrl: row.avatar_data ? `/api/user/avatar` : null };
+          const user = { ...row, avatarUrl: row.avatar_data ? `/api/user/avatar/${userId}` : null };
           delete user.avatar_data;
           delete user.avatar_mime;
           return res.json({ user });
@@ -174,14 +175,14 @@ app.put('/api/user', authenticateToken, (req, res) => {
   }
 });
 
-// Get user avatar
-app.get('/api/user/avatar', authenticateToken, (req, res) => {
+// Get user avatar (public by id)
+app.get('/api/user/avatar/:id', (req, res) => {
   try {
-    const userId = req.user && req.user.id;
+    const userId = req.params.id;
     db.get(`SELECT avatar_data, avatar_mime FROM users WHERE id = ?`, [userId], (err, row) => {
       if (err) return res.status(500).json({ error: err.message });
       if (!row || !row.avatar_data) return res.status(404).json({ error: 'no avatar' });
-      res.set('Content-Type', row.avatar_mime);
+      res.set('Content-Type', row.avatar_mime || 'image/png');
       res.send(row.avatar_data);
     });
   } catch (err) {
@@ -200,7 +201,7 @@ app.post('/api/user/avatar', authenticateToken, upload.single('avatar'), (req, r
       if (err) return res.status(500).json({ error: err.message });
       db.get(`SELECT id, username, avatar_data, avatar_mime, created_at FROM users WHERE id = ?`, [userId], (e2, row) => {
         if (e2) return res.status(500).json({ error: e2.message });
-        const user = { ...row, avatarUrl: row.avatar_data ? `/api/user/avatar` : null };
+        const user = { ...row, avatarUrl: row.avatar_data ? `/api/user/avatar/${userId}` : null };
         delete user.avatar_data;
         delete user.avatar_mime;
         return res.json({ user });
@@ -219,7 +220,7 @@ app.delete('/api/user/avatar', authenticateToken, (req, res) => {
       if (err) return res.status(500).json({ error: err.message });
       db.get(`SELECT id, username, avatar_data, avatar_mime, created_at FROM users WHERE id = ?`, [userId], (e2, user) => {
         if (e2) return res.status(500).json({ error: e2.message });
-        const responseUser = { ...user, avatarUrl: user.avatar_data ? `/api/user/avatar` : null };
+        const responseUser = { ...user, avatarUrl: user.avatar_data ? `/api/user/avatar/${userId}` : null };
         delete responseUser.avatar_data;
         delete responseUser.avatar_mime;
         return res.json({ user: responseUser });
