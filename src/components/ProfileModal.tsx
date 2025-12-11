@@ -125,7 +125,6 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
         try { window.dispatchEvent(new CustomEvent('gowatch:login', { detail: updatedUser })); } catch {}
         try { window.dispatchEvent(new CustomEvent('gowatch:toast', { detail: { message: 'Profile updated', type: 'success' } })); } catch {}
         
-        // Update preview to show saved avatar immediately
         if (updatedUser.avatarUrl) {
           const fullUrl = mediaUrl(updatedUser.avatarUrl);
           setAvatarPreview(fullUrl);

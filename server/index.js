@@ -77,10 +77,6 @@ app.post('/api/auth/signup', (req, res) => {
   }
 });
 
-// NOTE: a single login handler with token issuance is defined below; the
-// earlier/duplicate handler was removed to ensure clients receive the JWT.
-
-// enhance login to return token as well
 app.post('/api/auth/login', (req, res) => {
   try {
     const { username, password } = req.body;
@@ -109,7 +105,6 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, pid: process.pid });
 });
 
-// Authentication middleware: verifies Authorization: Bearer <token>
 function authenticateToken(req, res, next) {
   const auth = req.headers && req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'missing authorization header' });
@@ -125,11 +120,9 @@ function authenticateToken(req, res, next) {
   }
 }
 
-// Configure multer for avatar uploads (in memory)
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Update user credentials (username, password)
 app.put('/api/user', authenticateToken, (req, res) => {
   try {
     const userId = req.user && req.user.id;
@@ -175,7 +168,6 @@ app.put('/api/user', authenticateToken, (req, res) => {
   }
 });
 
-// Get user avatar (public by id)
 app.get('/api/user/avatar/:id', (req, res) => {
   try {
     const userId = req.params.id;
@@ -190,7 +182,6 @@ app.get('/api/user/avatar/:id', (req, res) => {
   }
 });
 
-// Upload or replace avatar
 app.post('/api/user/avatar', authenticateToken, upload.single('avatar'), (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'avatar file required' });
@@ -212,7 +203,6 @@ app.post('/api/user/avatar', authenticateToken, upload.single('avatar'), (req, r
   }
 });
 
-// Optional: remove avatar
 app.delete('/api/user/avatar', authenticateToken, (req, res) => {
   try {
     const userId = req.user && req.user.id;
@@ -231,13 +221,10 @@ app.delete('/api/user/avatar', authenticateToken, (req, res) => {
   }
 });
 
-// Delete current user and all related data
 app.delete('/api/user', authenticateToken, (req, res) => {
   try {
     const userId = req.user && req.user.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
-    // Begin a simple transactional sequence
 
       db.run('BEGIN', (beginErr) => {
         if (beginErr) return res.status(500).json({ error: beginErr.message });
@@ -253,7 +240,6 @@ app.delete('/api/user', authenticateToken, (req, res) => {
             db.run('COMMIT', (commitErr) => {
               if (commitErr) return res.status(500).json({ error: commitErr.message });
 
-              // No content on success
               return res.status(204).end();
             });
         });
@@ -263,7 +249,6 @@ app.delete('/api/user', authenticateToken, (req, res) => {
     return res.status(500).json({ error: err?.message || 'internal' });
   }
 });app.post('/api/watchlist', authenticateToken, (req, res) => {
-  // Use the authenticated user id from the token; ignore any client-supplied userId.
   const userId = req.user && req.user.id;
   const { movie } = req.body;
   if (!userId || !movie || !movie.id) return res.status(400).json({ error: 'userId and movie.id required' });
@@ -297,7 +282,6 @@ app.delete('/api/user', authenticateToken, (req, res) => {
   });
 });
 
-// Token-protected endpoints that use the authenticated user id from the token
 app.get('/api/watchlist', authenticateToken, (req, res) => {
   const userId = req.user && req.user.id;
   const query = `SELECT movie_id as movieId, title, poster, MAX(created_at) as created_at FROM watchlist WHERE user_id = ? GROUP BY movie_id ORDER BY created_at DESC`;
@@ -349,20 +333,16 @@ function startServer(port, attempts = 0, maxAttempts = 5) {
 }
 
 app.use((err, req, res, next) => {
-  // Always log the full stack server-side
   console.error('Unhandled server error:', err && err.stack ? err.stack : err);
   try {
-    // Expose stack traces in development to help debugging requests from the frontend.
     const payload = { error: err?.message || String(err) };
     if (process.env.NODE_ENV !== 'production') {
       payload.stack = err && err.stack ? err.stack : undefined;
     }
     res.status(500).json(payload);
-  } catch (e) { /* noop */ }
+  } catch (e) { }
 });
 
-// When this file is executed directly, start the server.
-// When required (e.g., from tests), export app and startServer without binding automatically.
 if (require.main === module) {
   startServer(PORT);
 }

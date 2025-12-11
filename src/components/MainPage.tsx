@@ -61,7 +61,6 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Restore session
     try {
       const raw = localStorage.getItem('gowatch_user');
       if (raw) {
@@ -79,7 +78,6 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
       }
     } catch {}
 
-    // Login event: refresh watchlist
     const onLogin = async (e: any) => {
       const user = e?.detail;
       if (!user) return;
@@ -95,7 +93,6 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
 
     const onOpenAuth = () => setIsAuthOpen(true);
 
-    // Save movie requests from other components
     const onSaveMovie = async (e: any) => {
       const movie: Movie | undefined = e?.detail;
       if (!movie) return;
@@ -122,7 +119,6 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
       }
     };
 
-    // Cross-component sync events
     const onWlAdded = (e: any) => {
       const item = e?.detail;
       if (!item) return;
@@ -222,7 +218,7 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
   };
 
   const closeAuth = () => {
-    try { window.dispatchEvent(new CustomEvent('gowatch:closeAuth')); } catch { /* no-op */ }
+    try { window.dispatchEvent(new CustomEvent('gowatch:closeAuth')); } catch { }
   };
 
   const handleCloseAuth = () => {
@@ -235,7 +231,6 @@ const MainPage: React.FC<MainPageProps> = ({ initialSearchQuery = '' }) => {
     try {
   const { removeFromWatchlist } = await import('../lib/watchlist');
   const r = await removeFromWatchlist(movieId);
-  // if removal was successful, update state locally
   if (r && (r.deleted === undefined || r.deleted >= 0)) {
     setWatchlist(prev => (prev || []).filter(i => String(i.movieId) !== String(movieId)));
   } else {

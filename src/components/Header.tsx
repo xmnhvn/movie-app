@@ -25,15 +25,12 @@ interface HeaderProps {
 }
 
 export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOpenAuth, watchlistCount, currentUser, onLogout }: HeaderProps) {
-  // Maintain a local copy of the user that can update immediately from global events
   const [headerUser, setHeaderUser] = useState<any>(currentUser || null);
 
-  // Keep local user in sync with prop
   useEffect(() => {
     setHeaderUser(currentUser || null);
   }, [currentUser]);
 
-  // Also react immediately to profile updates broadcasted globally
   useEffect(() => {
     const onLogin = (e: any) => {
       const u = e?.detail || null;
@@ -140,7 +137,6 @@ export function Header({ onSearch, showNavigation = false, onOpenWatchlist, onOp
                 <div className="flex items-center ml-4 space-x-4">
                 {currentUser ? (
                   <div className="flex items-center gap-2">
-                    {/* Watchlist button placed to the left of the user menu */}
                     <Button
                       onClick={() => onOpenWatchlist && onOpenWatchlist()}
                       className="h-10 px-4 py-2 bg-gray-700 text-white rounded-xl flex items-center gap-2"

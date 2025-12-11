@@ -125,8 +125,6 @@ export function MovieModal({ movie, isOpen, onClose, isSaved = false }: MovieMod
                       onClick={() => {
                         if (saved) return;
                         try {
-                          // Fire a global intent to save. Actual saved state will update
-                          // only after a confirmed add event, so unauth cancel won't flip it.
                           window.dispatchEvent(new CustomEvent('gowatch:saveMovie', { detail: movie }));
                         } catch (err) {
                         }

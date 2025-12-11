@@ -103,7 +103,6 @@ export function WatchlistModal({
         }}
       >
         <div className="w-full h-full flex flex-col">
-          {/* Header */}
           <div className="mt-4 flex items-center justify-between pb-3 mb-4 border-b border-gray-200 sticky top-0 bg-white z-10">
             <div className="mb-3 flex items-center gap-2 text-gray-900">
               <Heart className="w-5 h-5 text-gray-500" />
@@ -161,7 +160,6 @@ export function WatchlistModal({
             )}
           </div>
 
-          {/* Content */}
           <div className="flex-1 flex flex-col overflow-y-auto">
             {watchlist.length === 0 ? (
               <div className="flex-1 grid place-items-center">
@@ -206,7 +204,6 @@ export function WatchlistModal({
                   ))}
                 </div>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-auto pb-1">
                     <Button
@@ -237,7 +234,6 @@ export function WatchlistModal({
           </div>
         </div>
 
-        {/* Confirm Delete Modal */}
         {showConfirm && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg p-6 w-[320px] text-center">
