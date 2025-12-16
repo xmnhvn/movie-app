@@ -1,6 +1,17 @@
 {
   "pages": {
-    "/_app": []
+    "/_app": [
+      "static/chunks/373fd_next_dist_compiled_e0b11700._.js",
+      "static/chunks/373fd_next_dist_shared_lib_1dec1a35._.js",
+      "static/chunks/373fd_next_dist_client_e5a9ca24._.js",
+      "static/chunks/373fd_next_dist_42b7a2ca._.js",
+      "static/chunks/373fd_react-dom_f05190d3._.js",
+      "static/chunks/373fd_900daa70._.js",
+      "static/chunks/[root-of-the-server]__4279b356._.js",
+      "static/chunks/Projects_GoWatch_src_index_80082a53.css",
+      "static/chunks/Projects_GoWatch_pages__app_2da965e7._.js",
+      "static/chunks/turbopack-Projects_GoWatch_pages__app_891f4f83._.js"
+    ]
   },
   "devFiles": [],
   "polyfillFiles": [],
